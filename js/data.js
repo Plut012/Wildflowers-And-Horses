@@ -5,11 +5,11 @@ export const FLOWERS = {
   daisy: {
     id: 'daisy',
     name: 'Daisy',
-    seedCost: 5,
+    seedCost: 4,        // affordable early-game seed
     sellPrice: 8,
-    growTime: 12,      // seconds to fully grow
-    waterTime: 6,      // seconds after watering before next stage
-    stages: 3,         // seed → sprout → bloom
+    growTime: 14,       // seconds to fully grow (slightly slower = more satisfying)
+    waterTime: 6,       // seconds after watering before next stage
+    stages: 3,          // seed → sprout → bloom
     colors: {
       seed:   '#8B6914',
       sprout: '#6aaa4a',
@@ -20,9 +20,9 @@ export const FLOWERS = {
   lavender: {
     id: 'lavender',
     name: 'Lavender',
-    seedCost: 10,
+    seedCost: 9,
     sellPrice: 18,
-    growTime: 25,
+    growTime: 28,
     waterTime: 12,
     stages: 3,
     colors: {
@@ -35,30 +35,30 @@ export const FLOWERS = {
   sunflower: {
     id: 'sunflower',
     name: 'Sunflower',
-    seedCost: 15,
+    seedCost: 14,
     sellPrice: 30,
-    growTime: 45,
-    waterTime: 20,
+    growTime: 50,
+    waterTime: 22,
     stages: 3,
     colors: {
       seed:   '#8B6914',
       sprout: '#66BB6A',
       bloom:  '#FFD600',
-      center: '#6D4C41',
+      center: '#5D4037',
     },
   },
   clover: {
     id: 'clover',
     name: 'Clover',
-    seedCost: 8,
-    sellPrice: 12,
-    growTime: 18,
+    seedCost: 7,
+    sellPrice: 13,
+    growTime: 20,
     waterTime: 9,
     stages: 3,
     colors: {
       seed:   '#8B6914',
       sprout: '#4CAF50',
-      bloom:  '#EF9A9A',
+      bloom:  '#F48FB1',
       center: '#E53935',
     },
   },
@@ -66,9 +66,9 @@ export const FLOWERS = {
     id: 'rosehip',
     name: 'Rosehip',
     seedCost: 12,
-    sellPrice: 22,
-    growTime: 35,
-    waterTime: 16,
+    sellPrice: 24,
+    growTime: 38,
+    waterTime: 17,
     stages: 3,
     colors: {
       seed:   '#8B6914',
@@ -80,10 +80,10 @@ export const FLOWERS = {
   bluebell: {
     id: 'bluebell',
     name: 'Bluebell',
-    seedCost: 18,
-    sellPrice: 35,
-    growTime: 55,
-    waterTime: 25,
+    seedCost: 17,
+    sellPrice: 36,
+    growTime: 60,
+    waterTime: 26,
     stages: 3,
     colors: {
       seed:   '#8B6914',
@@ -96,9 +96,9 @@ export const FLOWERS = {
     id: 'marigold',
     name: 'Marigold',
     seedCost: 20,
-    sellPrice: 40,
-    growTime: 70,
-    waterTime: 30,
+    sellPrice: 42,
+    growTime: 75,
+    waterTime: 32,
     stages: 3,
     colors: {
       seed:   '#8B6914',
@@ -110,10 +110,10 @@ export const FLOWERS = {
   moonpetal: {
     id: 'moonpetal',
     name: 'Moonpetal',
-    seedCost: 30,
-    sellPrice: 65,
-    growTime: 120,
-    waterTime: 50,
+    seedCost: 28,       // slightly more accessible
+    sellPrice: 70,      // very rewarding to grow
+    growTime: 130,      // long but worth it
+    waterTime: 55,
     stages: 3,
     colors: {
       seed:   '#8B6914',
@@ -126,9 +126,9 @@ export const FLOWERS = {
 
 export const FLOWER_LIST = Object.values(FLOWERS);
 
-// Starting conditions
-export const STARTING_COINS = 30;
-export const STARTING_SEEDS = { daisy: 3 };
+// Starting conditions — enough to get going without frustration
+export const STARTING_COINS = 40;
+export const STARTING_SEEDS = { daisy: 4, clover: 2 };
 
 // Grid layout
 export const GRID_COLS = 4;

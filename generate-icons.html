@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!-- generate-icons.html — Open this in a browser to generate proper PWA icons.
+     Click each button to download the icon, then copy to assets/. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Generate Pony Pastures Icons</title>
+<style>
+  body { font-family: monospace; background: #2C1A0E; color: #FFF8E1; padding: 24px; }
+  canvas { border: 2px solid #8D6E63; margin: 8px; image-rendering: pixelated; }
+  button { background: #6D4C41; color: #FFF8E1; border: 1px solid #8D6E63; padding: 8px 16px;
+           font: bold 13px monospace; cursor: pointer; margin: 4px; border-radius: 4px; }
+  button:hover { background: #8D5A3A; }
+  .row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<h2>Pony Pastures Icon Generator</h2>
+<p>These icons are drawn programmatically. Download and put in <code>assets/</code>.</p>
+
+<div class="row">
+  <canvas id="c192" width="192" height="192"></canvas>
+  <canvas id="c512" width="512" height="512"></canvas>
+</div>
+<div class="row">
+  <button onclick="download('c192', 'icon-192.png')">Save icon-192.png</button>
+  <button onclick="download('c512', 'icon-512.png')">Save icon-512.png</button>
+</div>
+
+<script>
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawIcon(ctx, size) {
+  const pad = size * 0.06;
+
+  // Warm brown border/bg
+  ctx.fillStyle = '#8B7355';
+  ctx.fillRect(0, 0, size, size);
+
+  // Ground background
+  ctx.fillStyle = '#C8A96E';
+  roundRect(ctx, pad, pad, size - pad * 2, size - pad * 2, size * 0.18);
+  ctx.fill();
+
+  // Sky (top portion)
+  ctx.fillStyle = '#F5E6D0';
+  roundRect(ctx, pad, pad, size - pad * 2, size * 0.48, size * 0.18);
+  ctx.fill();
+
+  // Sun glow
+  const sunX = size * 0.74;
+  const sunY = size * 0.22;
+  const sunR = size * 0.075;
+  const grad = ctx.createRadialGradient(sunX, sunY, sunR * 0.3, sunX, sunY, sunR * 2);
+  grad.addColorStop(0, '#FFF9C4');
+  grad.addColorStop(0.4, '#FFD54F');
+  grad.addColorStop(1, 'rgba(255,213,79,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, sunR * 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#FFF9C4';
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Grass strip
+  ctx.fillStyle = '#8DB85A';
+  ctx.fillRect(pad, size * 0.52, size - pad * 2, size * 0.07);
+  ctx.fillStyle = '#C8A96E';
+  ctx.fillRect(pad, size * 0.59, size - pad * 2, size * 0.35);
+
+  // Fence
+  const fy = size * 0.51;
+  ctx.fillStyle = '#A07820';
+  ctx.fillRect(pad, fy, size - pad * 2, size * 0.022);
+  ctx.fillRect(pad, fy + size * 0.06, size - pad * 2, size * 0.022);
+  ctx.fillStyle = '#8B6914';
+  for (let x = pad; x < size - pad; x += size * 0.095) {
+    ctx.fillRect(x, fy - size * 0.022, size * 0.028, size * 0.115);
+  }
+
+  // Three flowers in foreground (pixel-art style)
+  const flowerData = [
+    { x: 0.27, bloom: '#FFFDE7', center: '#FFD54F' }, // daisy
+    { x: 0.50, bloom: '#CE93D8', center: '#9C27B0' }, // lavender
+    { x: 0.73, bloom: '#FFD600', center: '#5D4037' }, // sunflower
+  ];
+  for (const { x, bloom, center } of flowerData) {
+    const fx = size * x;
+    const flY = size * 0.7;
+    const pr = size * 0.055;
+    const stemTop = flY - pr * 3;
+    // Stem
+    ctx.fillStyle = '#6aaa4a';
+    ctx.fillRect(Math.round(fx - size * 0.01), Math.round(stemTop), Math.round(size * 0.02), Math.round(pr * 3));
+    // Petals (6)
+    ctx.fillStyle = bloom;
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const px = Math.round(fx + Math.cos(a) * pr);
+      const py = Math.round(flY - pr * 1.5 + Math.sin(a) * pr);
+      ctx.fillRect(px - Math.ceil(pr * 0.38), py - Math.ceil(pr * 0.38),
+                   Math.ceil(pr * 0.75), Math.ceil(pr * 0.75));
+    }
+    // Center
+    ctx.fillStyle = center;
+    const cr = Math.ceil(pr * 0.5);
+    ctx.fillRect(Math.round(fx - cr / 2), Math.round(flY - pr * 1.5 - cr / 2), cr, cr);
+  }
+
+  // Horse silhouette (right side, warm chestnut)
+  const hx = size * 0.77;
+  const hy = size * 0.495;
+  const hs = size / 60;
+  ctx.fillStyle = '#8B3A2A';
+  // Body
+  ctx.fillRect(Math.round(hx - hs * 18), Math.round(hy - hs * 10), Math.round(hs * 20), Math.round(hs * 10));
+  // Neck
+  ctx.fillRect(Math.round(hx), Math.round(hy - hs * 18), Math.round(hs * 5), Math.round(hs * 10));
+  // Head
+  ctx.fillRect(Math.round(hx - hs), Math.round(hy - hs * 24), Math.round(hs * 9), Math.round(hs * 7));
+  // Ear
+  ctx.fillRect(Math.round(hx + hs), Math.round(hy - hs * 27), Math.round(hs * 3), Math.round(hs * 4));
+  // Mane
+  ctx.fillStyle = '#5C1F10';
+  ctx.fillRect(Math.round(hx), Math.round(hy - hs * 23), Math.round(hs * 3), Math.round(hs * 7));
+  // Eye
+  ctx.fillStyle = '#2C1810';
+  ctx.fillRect(Math.round(hx + hs * 3), Math.round(hy - hs * 22), Math.round(hs * 2), Math.round(hs * 2));
+  // Eye highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillRect(Math.round(hx + hs * 4), Math.round(hy - hs * 22), Math.round(hs), Math.round(hs));
+}
+
+function download(canvasId, filename) {
+  const canvas = document.getElementById(canvasId);
+  const a = document.createElement('a');
+  a.download = filename;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+// Draw both icons
+for (const id of ['c192', 'c512']) {
+  const canvas = document.getElementById(id);
+  const ctx = canvas.getContext('2d');
+  drawIcon(ctx, canvas.width);
+}
+</script>
+</body>
+</html>

@@ -45,23 +45,32 @@ html, body {
 .seed-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(62, 39, 35, 0.82);
+  gap: 6px;
+  background: rgba(62, 39, 35, 0.90);
   color: #FFF8E1;
   border: 2px solid #8D6E63;
-  border-radius: 6px;
-  padding: 5px 10px;
+  border-radius: 8px;
+  /* Comfortable touch target */
+  padding: 8px 12px;
+  min-height: 40px;
   font: bold 13px monospace;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background 0.1s, border-color 0.1s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.35);
 }
 
-.seed-btn:active,
-.seed-btn.active {
+.seed-btn:active {
   background: #6D4C41;
   border-color: #FFD54F;
+  transform: scale(0.95);
+}
+
+.seed-btn.active {
+  background: #5D3A1A;
+  border-color: #FFD54F;
   color: #FFD54F;
+  box-shadow: 0 0 8px rgba(255,213,79,0.4);
 }
 
 .seed-dot {
@@ -76,8 +85,8 @@ html, body {
 
 #top-buttons {
   position: fixed;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
   display: flex;
   flex-direction: row;
   gap: 6px;
@@ -85,19 +94,24 @@ html, body {
 }
 
 #top-buttons button {
-  background: rgba(62, 39, 35, 0.88);
+  background: rgba(62, 39, 35, 0.92);
   color: #FFF8E1;
   border: 2px solid #8D6E63;
   border-radius: 8px;
-  padding: 7px 11px;
+  /* Comfortable touch target: min 44px height */
+  padding: 10px 13px;
+  min-height: 44px;
   font: bold 13px monospace;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  /* Subtle shadow for depth */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
 
 #top-buttons button:active {
   background: #6D4C41;
   border-color: #FFD54F;
+  transform: scale(0.96);
 }
 
 /* ── Market overlay ───────────────────────────────────────────────────────── */
@@ -147,19 +161,27 @@ html, body {
   font: bold 14px monospace;
 }
 
-#market-close {
+#market-close,
+#feed-close,
+#stable-close,
+#journal-close {
   background: transparent;
   border: 2px solid #8D6E63;
   color: #FFF8E1;
-  border-radius: 5px;
-  padding: 4px 10px;
-  font: bold 14px monospace;
+  border-radius: 6px;
+  padding: 7px 12px;
+  min-height: 40px;
+  font: bold 13px monospace;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-#market-close:active {
+#market-close:active,
+#feed-close:active,
+#stable-close:active,
+#journal-close:active {
   background: #6D4C41;
+  border-color: #FFD54F;
 }
 
 .market-section h3 {
@@ -217,8 +239,9 @@ html, body {
   background: #6D4C41;
   color: #FFF8E1;
   border: 1px solid #8D6E63;
-  border-radius: 5px;
-  padding: 5px 9px;
+  border-radius: 6px;
+  padding: 8px 11px;
+  min-height: 40px;
   font: bold 12px monospace;
   cursor: pointer;
   flex-shrink: 0;
@@ -227,13 +250,13 @@ html, body {
 
 .market-buy-btn:active,
 .market-sell-btn:active {
-  background: #5D4037;
+  background: #8D5A3A;
   border-color: #FFD54F;
 }
 
 .market-buy-btn:disabled,
 .market-sell-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
@@ -290,21 +313,24 @@ html, body {
 .feed-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: #5D3A2A;
   color: #FFF8E1;
   border: 2px solid #8D6E63;
-  border-radius: 7px;
-  padding: 10px 14px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-height: 48px;
   font: bold 14px monospace;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   text-align: left;
+  transition: background 0.1s, border-color 0.1s;
 }
 
 .feed-btn:active {
   background: #8D5A3A;
   border-color: #FFD54F;
+  transform: scale(0.97);
 }
 
 .feed-qty {

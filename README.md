@@ -2,6 +2,8 @@
 
 A cozy pixel-art horse farm for your pocket. Grow wildflowers, earn the trust of wild horses, and watch your little farm flourish.
 
+8 flowers. 8 horses. A warm little world you tend at your own pace.
+
 ## Play
 
 Open `localhost:8080` in Samsung Internet and tap "Add to Home Screen."
@@ -22,8 +24,15 @@ Open `localhost:8080` in your browser.
 3. Reboot — the server starts automatically
 4. Add `localhost:8080` to home screen once
 
+## Icons
+
+PWA icons live at `assets/icon-192.png` and `assets/icon-512.png`.
+
+To regenerate: `node generate-icons.js` (creates warm-color placeholder PNGs)
+For proper drawn icons: open `generate-icons.html` in any browser, click Save.
+
 ## Docs
 
 - [Game Vision](docs/overview.md) — what Pony Pastures is and feels like
-- [Architecture](docs/architecture.md) — technical plan and file structure
-- [Dev Notes](docs/CLAUDE.md) — rules and conventions for development
+- [Architecture](docs/architecture.md) — technical plan and phase history
+- [Dev Notes](docs/CLAUDE.md) — rules, conventions, and architecture notes

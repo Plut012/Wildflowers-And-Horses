@@ -2,7 +2,7 @@
 
 import { STARTING_COINS, STARTING_SEEDS, PLOT_COUNT, PLOT_STATE, FLOWERS, FLOWER_LIST, HORSES, PERKS } from './data.js';
 import { createPlots, hydrateGarden, plantSeed, waterPlot, harvestPlotWithPerks, tickGarden, plotAtPoint } from './garden.js';
-import { render, computeLayout } from './render.js';
+import { render, computeLayout, triggerPlotAnim } from './render.js';
 import { initMarket, isMarketOpen } from './market.js';
 import { saveGame, loadGame } from './save.js';
 import { defaultHorsesState, hydrateHorses, tickHorses, feedHorse } from './horses.js';
@@ -33,6 +33,9 @@ function defaultState() {
 
 function mergeState(saved) {
   const base = defaultState();
+  // Show tutorial on very first play (no save data exists yet)
+  base._showTutorial = !saved;
+
   if (!saved) return base;
 
   if (saved.inventory) {
@@ -84,31 +87,40 @@ if ('serviceWorker' in navigator) {
 
 const floatingTexts = [];
 
-function showFloatingText(plotIndex, text) {
+function showFloatingText(plotIndex, text, color) {
   if (!layout) return;
   const { originX, originY, plotW, plotH, gap } = layout;
   const col = plotIndex % 4;
   const row = Math.floor(plotIndex / 4);
   const px = originX + col * (plotW + gap) + plotW / 2;
   const py = originY + row * (plotH + gap) + plotH / 2;
-  floatingTexts.push({ text, x: px, y: py, life: 1.0 });
+  // Coin texts get gold color, seed texts get green
+  const autoColor = text.startsWith('+') && text.includes('coins') ? '#FFD54F'
+                  : text.includes('seed') ? '#A5D6A7'
+                  : null;
+  floatingTexts.push({ text, x: px, y: py, life: 1.0, color: color || autoColor || '#FFF8E1' });
 }
 
 function drawFloatingTexts(dt) {
   for (let i = floatingTexts.length - 1; i >= 0; i--) {
     const ft = floatingTexts[i];
-    ft.y    -= 1.2;
-    ft.life -= dt * 1.4;
+    // Bouncy easing: fast up then slow down
+    ft.life -= dt * 1.2;
     if (ft.life <= 0) { floatingTexts.splice(i, 1); continue; }
+    // Ease upward — faster start
+    const age = 1.0 - ft.life;
+    ft.y -= (2.5 - age * 1.5);
     ctx.save();
-    ctx.globalAlpha  = Math.max(0, ft.life);
-    ctx.font         = 'bold 14px monospace';
+    // Scale bounce on fresh texts
+    const scale = ft.life > 0.85 ? (1 + (1 - ft.life) * 2) : 1;
+    ctx.globalAlpha  = Math.min(1, ft.life * 1.5);
+    ctx.font         = `bold ${Math.round(14 * scale)}px monospace`;
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
     ctx.strokeStyle  = 'rgba(0,0,0,0.65)';
     ctx.lineWidth    = 3;
     ctx.strokeText(ft.text, ft.x, ft.y);
-    ctx.fillStyle = '#FFF8E1';
+    ctx.fillStyle = ft.color || '#FFF8E1';
     ctx.fillText(ft.text, ft.x, ft.y);
     ctx.restore();
   }
@@ -161,6 +173,10 @@ function handlePlotTap(plot) {
   const now = Date.now();
 
   if (plot.state === PLOT_STATE.READY) {
+    // Store flowerId before harvest clears it
+    const harvestFlowerId = plot.flowerId;
+    const harvestIndex = plot.index;
+    triggerPlotAnim(harvestIndex, 'harvest', { flowerId: harvestFlowerId });
     const result = harvestPlotWithPerks(plot, state.garden.plots, state.horses);
     if (result) {
       const { flowerId, count, bonusCoins, freeSeed, autoPlowedIndices } = result;
@@ -182,6 +198,8 @@ function handlePlotTap(plot) {
       saveGame(state);
       updateFlowerSelector();
       showFloatingText(plot.index, harvestLabel);
+      // Dismiss tutorial after first harvest
+      state._showTutorial = false;
     }
     return;
   }
@@ -211,6 +229,8 @@ function handlePlotTap(plot) {
   }
 
   if (plantSeed(plot, state.selectedFlower, state, now)) {
+    triggerPlotAnim(plot.index, 'plant');
+    state._showTutorial = false;
     saveGame(state);
     updateFlowerSelector();
     showFloatingText(plot.index, 'Planted!');
@@ -381,12 +401,14 @@ function showHorseFloating(text, positive) {
 function drawHorseFloatingTexts(dt) {
   for (let i = horseFloatingTexts.length - 1; i >= 0; i--) {
     const ft = horseFloatingTexts[i];
-    ft.y    -= 0.9;
-    ft.life -= dt * 0.6;
+    ft.life -= dt * 0.55;
     if (ft.life <= 0) { horseFloatingTexts.splice(i, 1); continue; }
+    // Bouncy rise
+    ft.y -= 0.7 + (1 - ft.life) * 0.3;
     ctx.save();
-    ctx.globalAlpha  = Math.max(0, ft.life);
-    ctx.font         = 'bold 15px monospace';
+    const scale = ft.life > 0.88 ? (1 + (1 - ft.life) * 1.5) : 1;
+    ctx.globalAlpha  = Math.min(1, ft.life * 1.4);
+    ctx.font         = `bold ${Math.round(15 * scale)}px monospace`;
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
     ctx.strokeStyle  = 'rgba(0,0,0,0.7)';

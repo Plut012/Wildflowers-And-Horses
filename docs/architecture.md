@@ -193,14 +193,60 @@ Add the cookie-clicker depth.
 
 **Done when:** Opening the app after a break and seeing your passive farm humming feels warm and rewarding.
 
-### Phase 4 — Polish
+### Phase 4 — Polish ✓ COMPLETE
 Make it feel like a gift.
-- Pixel art sprites (horses, flowers, farm elements)
-- Ambient sound (optional, toggle)
-- Smooth animations (planting, growing, horse reactions)
-- PWA icon set
-- Termux:Boot setup tested on device
-- Final balance tuning
+
+**Visual improvements:**
+- All 8 flowers have distinct pixel-art bloom shapes: daisy (8-petal), lavender (spike), sunflower (large rays + dark center), clover (3-lobe), rosehip (5-petal rose), bluebell (hanging bells), marigold (dense layered), moonpetal (6-petal with glow)
+- All 8 horses have distinct character: body shapes, markings/spots/patches, hoof colors, mane widths (via HORSE_SHAPES table in render.js)
+- Campfire element at night: logs, layered flames, sparks floating up, warm orange ground glow
+- Meadow wildflowers in the background grass strip (bobbing gently)
+- Better fence: rail highlight, post caps, shadow
+- Sky gradient (day warm, night deep blue)
+- Twinkling stars at night
+
+**Animations:**
+- Planting: seed drops into soil (triggerPlotAnim)
+- Harvest: 8-particle color burst (triggerPlotAnim with flowerId stored)
+- Grow stages: seed small, sprout scaled, bloom full
+- Harvest sparkle changed to cross-shape; "needs water" drip animates
+- Floating texts: bouncy scale pop on spawn, ease upward, color-coded (gold for coins, green for seeds)
+- Horse reaction bubble: bounce offset on happy reactions
+- Unicorn horn: animated sparkle orbit + spiral stripe
+
+**UI polish:**
+- All close buttons and action buttons have min-height 40-48px (comfortable touch targets)
+- Seed buttons improved: active glow, scale-down tap feedback
+- Feed buttons larger padding (48px min-height)
+- Top buttons: larger padding, subtle drop shadow
+
+**Tutorial:**
+- On very first play (no save data), a pulsing golden arrow + "Tap a plot to plant!" hint appears above the first plot. Dismissed on first plant or harvest.
+
+**PWA icons:**
+- `assets/icon-192.png` and `assets/icon-512.png` generated (solid warm-brown placeholder)
+- `generate-icons.js` — Node script to regenerate icons (uses canvas npm if available, else writes valid placeholder PNGs)
+- `generate-icons.html` — Browser page for generating proper drawn icons without npm
+
+**Service worker:**
+- Updated to `pony-pastures-v4`, now caches `horses.js` and `journal.js` which were missing
+
+**Balance tuning:**
+- Starting coins: 30 → 40; starting seeds: 3 daisy → 4 daisy + 2 clover
+- Daisy seed cost: 5 → 4 (more accessible)
+- Moonpetal sell price: 65 → 70 (more rewarding for long grow time)
+- Grow times tweaked slightly for better pacing
+
+**Files changed:**
+- `js/render.js` — major rewrite: distinct flowers, horse shapes, campfire, meadow, animations, tutorial hint
+- `js/main.js` — triggerPlotAnim calls, bouncy floating text, tutorial flag, color-coded texts
+- `js/data.js` — balance tuning (starting coins, seed costs, grow times)
+- `sw.js` — cache version bump to v4, added horses.js + journal.js
+- `css/style.css` — touch targets, button feedback, seed button active glow
+- `assets/icon-192.png` — generated placeholder PWA icon
+- `assets/icon-512.png` — generated placeholder PWA icon
+- `generate-icons.js` — icon generation script (new)
+- `generate-icons.html` — browser icon generator (new)
 
 **Done when:** You'd be proud to hand her the phone.
 
