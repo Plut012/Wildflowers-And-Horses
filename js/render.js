@@ -59,8 +59,8 @@ export function computeLayout(canvasW, canvasH) {
   const gardenW = canvasW;
 
   const gap   = Math.max(4, Math.round(canvasW * 0.025));
-  const plotW = Math.floor((gardenW - gap * (GRID_COLS + 1)) / GRID_COLS);
-  const plotH = Math.floor((gardenH - gap * (GRID_ROWS + 1)) / GRID_ROWS);
+  const plotW = Math.floor((gardenW - gap * (GRID_COLS + 1)) / GRID_COLS * 0.8);
+  const plotH = Math.floor((gardenH - gap * (GRID_ROWS + 1)) / GRID_ROWS * 0.8);
 
   const totalGridW = GRID_COLS * plotW + (GRID_COLS + 1) * gap;
   const totalGridH = GRID_ROWS * plotH + (GRID_ROWS + 1) * gap;
@@ -1270,7 +1270,7 @@ function drawWildHorse(ctx, wild, W, gardenTop, elapsed, now) {
   const startX  = W + 60;
   const cx = startX + (targetX - startX) * easeOut(slideIn);
 
-  const scale = Math.max(1.2, W / 200);
+  const scale = Math.max(1.6, W / 150);
   const anim  = elapsed;
   const facing = 'left';
 
