@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#8B7355">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Pony Pastures</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Game canvas — all farm rendering happens here -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Flower selector bar — above canvas HUD, below market button -->
+  <div id="flower-selector" aria-label="Seed selector"></div>
+
+  <!-- Top-right button row -->
+  <div id="top-buttons">
+    <button id="stable-btn"  aria-label="Open stable">Stable</button>
+    <button id="journal-btn" aria-label="Open journal">Journal</button>
+    <button id="market-btn"  aria-label="Open market">Market</button>
+  </div>
+
+  <!-- Market overlay -->
+  <div id="market-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Market">
+    <div id="market-panel">
+      <div class="market-header">
+        <h2>Market</h2>
+        <span id="market-coins">Coins: 0</span>
+        <button id="market-close" aria-label="Close market">Close</button>
+      </div>
+
+      <div class="market-section">
+        <h3>Buy Seeds</h3>
+        <div id="market-seeds"></div>
+      </div>
+
+      <div class="market-section">
+        <h3>Sell Flowers</h3>
+        <div id="market-sell"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feed picker overlay — shown when a wild horse is visiting -->
+  <div id="feed-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Feed horse">
+    <div id="feed-panel">
+      <div class="market-header">
+        <h2>Feed Horse</h2>
+        <button id="feed-close" aria-label="Close">Close</button>
+      </div>
+      <p class="feed-hint">Which flower will you offer?</p>
+      <div id="feed-flower-list"></div>
+    </div>
+  </div>
+
+  <!-- Stable overlay -->
+  <div id="stable-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Stable">
+    <div id="stable-panel">
+      <div class="market-header">
+        <h2>Stable</h2>
+        <button id="stable-close" aria-label="Close stable">Close</button>
+      </div>
+      <div id="stable-horses"></div>
+    </div>
+  </div>
+
+  <!-- Journal overlay -->
+  <div id="journal-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Horse Whisper Journal">
+    <div id="journal-panel">
+      <div class="market-header">
+        <h2>Journal</h2>
+        <button id="journal-close" aria-label="Close journal">Close</button>
+      </div>
+      <p class="journal-subtitle">Horse Whisper Journal</p>
+      <div id="journal-entries"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
