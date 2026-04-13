@@ -53,7 +53,7 @@ function blendPalette(nf) {
 // Compute the grid layout for current canvas size
 export function computeLayout(canvasW, canvasH) {
   const uiBarH = Math.round(canvasH * 0.12);
-  const gardenTop    = Math.round(canvasH * 0.18);
+  const gardenTop    = Math.round(canvasH * 0.45);
   const gardenBottom = canvasH - uiBarH - 8;
   const gardenH = gardenBottom - gardenTop;
   const gardenW = canvasW;
