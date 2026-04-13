@@ -132,7 +132,7 @@ export const STARTING_SEEDS = { daisy: 4, clover: 2 };
 
 // Grid layout
 export const GRID_COLS = 4;
-export const GRID_ROWS = 3;
+export const GRID_ROWS = 5;
 export const PLOT_COUNT = GRID_COLS * GRID_ROWS;
 
 // Day/night cycle
