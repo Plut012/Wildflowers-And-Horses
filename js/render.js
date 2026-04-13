@@ -60,7 +60,7 @@ export function computeLayout(canvasW, canvasH) {
 
   const gap   = Math.max(4, Math.round(canvasW * 0.025));
   const plotW = Math.floor((gardenW - gap * (GRID_COLS + 1)) / GRID_COLS * 0.8);
-  const plotH = Math.floor((gardenH - gap * (GRID_ROWS + 1)) / GRID_ROWS * 0.8);
+  const plotH = Math.floor((gardenH - gap * (GRID_ROWS + 1)) / GRID_ROWS * 0.6);
 
   const totalGridW = GRID_COLS * plotW + (GRID_COLS + 1) * gap;
   const totalGridH = GRID_ROWS * plotH + (GRID_ROWS + 1) * gap;
