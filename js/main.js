@@ -137,7 +137,7 @@ function tick(now) {
   state.time.elapsed  += dt;
   state.totalPlaytime += dt;
 
-  tickGarden(state.garden.plots, now, state.horses);
+  tickGarden(state.garden.plots, Date.now(), state.horses);
   tickHorses(state.horses, state.time.elapsed, state.inventory);
   render(ctx, state, layout, now);
   drawFloatingTexts(dt);
