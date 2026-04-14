@@ -81,6 +81,54 @@ html, body {
   flex-shrink: 0;
 }
 
+/* ── Buy Garden button ────────────────────────────────────────────────────── */
+
+#buy-garden-btn {
+  position: fixed;
+  bottom: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 80, 20, 0.92);
+  color: #A5D6A7;
+  border: 2px solid #4A8040;
+  border-radius: 8px;
+  padding: 7px 14px;
+  min-height: 36px;
+  font: bold 12px monospace;
+  cursor: pointer;
+  z-index: 10;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  -webkit-tap-highlight-color: transparent;
+}
+
+#buy-garden-btn:active {
+  background: #2A6020;
+  border-color: #A5D6A7;
+  transform: translateX(-50%) scale(0.96);
+}
+
+#buy-garden-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Plot label ───────────────────────────────────────────────────────────── */
+
+#plot-label {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: rgba(255, 248, 225, 0.85);
+  font: bold 12px monospace;
+  background: rgba(62, 39, 35, 0.75);
+  border: 1px solid rgba(141, 110, 99, 0.5);
+  border-radius: 6px;
+  padding: 4px 8px;
+  z-index: 20;
+  pointer-events: none;
+}
+
 /* ── Top button row ───────────────────────────────────────────────────────── */
 
 #top-buttons {

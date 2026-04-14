@@ -1,7 +1,7 @@
 // render.js — Canvas drawing: farm, plots, flowers, horses, day/night.
 
-import { PALETTE, PLOT_STATE, GRID_COLS, GRID_ROWS, DAY_DURATION, NIGHT_FRACTION, FLOWERS, HORSES } from './data.js';
-import { plotRect } from './garden.js';
+import { PALETTE, PLOT_STATE, GRID_COLS, DAY_DURATION, NIGHT_FRACTION, FLOWERS, HORSES, PLOT_BUY_COSTS } from './data.js';
+import { plotRect, gardenCols, gardenRows } from './garden.js';
 import { isTamed, getPerkLevel } from './horses.js';
 
 // Lerp between two hex colours
@@ -50,8 +50,12 @@ function blendPalette(nf) {
   };
 }
 
-// Compute the grid layout for current canvas size
-export function computeLayout(canvasW, canvasH) {
+// Compute the grid layout for current canvas size and garden count
+export function computeLayout(canvasW, canvasH, gardenCount) {
+  gardenCount = gardenCount || 5;
+  const cols = gardenCols(gardenCount);
+  const rows = gardenRows(gardenCount);
+
   const uiBarH = Math.round(canvasH * 0.12);
   const gardenTop    = Math.round(canvasH * 0.45);
   const gardenBottom = canvasH - uiBarH - 8;
@@ -59,16 +63,25 @@ export function computeLayout(canvasW, canvasH) {
   const gardenW = canvasW;
 
   const gap   = Math.max(4, Math.round(canvasW * 0.025));
-  const plotW = Math.floor((gardenW - gap * (GRID_COLS + 1)) / GRID_COLS * 0.8);
-  const plotH = Math.floor((gardenH - gap * (GRID_ROWS + 1)) / GRID_ROWS * 0.35);
+  const plotW = Math.floor((gardenW - gap * (cols + 1)) / cols * 0.8);
+  const plotH = Math.floor((gardenH - gap * (rows + 1)) / rows * 0.35);
 
-  const totalGridW = GRID_COLS * plotW + (GRID_COLS + 1) * gap;
-  const totalGridH = GRID_ROWS * plotH + (GRID_ROWS + 1) * gap;
+  const totalGridW = cols * plotW + (cols + 1) * gap;
+  const totalGridH = rows * plotH + (rows + 1) * gap;
 
   const originX = Math.floor((canvasW - totalGridW) / 2) + gap;
   const originY = gardenTop + Math.floor((gardenH - totalGridH) / 2) + gap;
 
-  return { originX, originY, plotW, plotH, gap, uiBarH, gardenTop };
+  return { originX, originY, plotW, plotH, gap, uiBarH, gardenTop, cols, rows };
+}
+
+// Compute farm-view layout (zoomed-out, shows all plot tiles)
+export function computeFarmLayout(canvasW, canvasH) {
+  const uiBarH = Math.round(canvasH * 0.12);
+  // Farm tiles live in the lower portion of the screen
+  const farmTop    = Math.round(canvasH * 0.45);
+  const farmBottom = canvasH - uiBarH - 8;
+  return { uiBarH, farmTop, farmBottom, canvasW, canvasH };
 }
 
 // ── Plot animation state (module-level, lightweight) ─────────────────────────
@@ -111,29 +124,194 @@ export function render(ctx, state, layout, now) {
   // Grass tufts along top of ground
   drawGrassTufts(ctx, W, gardenTop, pal.grass, nf);
 
-  // Plot grid
-  drawPlots(ctx, state.garden.plots, layout, pal, state.horses, now);
+  const farm = state.farm;
 
-  // Wild horse visitor (drawn between fence and plots)
-  if (state.horses && state.horses.wild) {
-    drawWildHorse(ctx, state.horses.wild, W, gardenTop, state.time.elapsed, now);
+  if (farm && farm.viewMode === 'farm') {
+    // Zoomed-out farm view
+    drawFarmView(ctx, W, H, farm, uiBarH, gardenTop, pal, nf, now, state.inventory);
+  } else {
+    // Zoomed-in plot view (existing gameplay)
+    const activePlot = farm ? farm.plots[farm.activePlot] : null;
+    const gardens = activePlot ? activePlot.gardens : (state.garden ? state.garden.plots : []);
+
+    drawPlots(ctx, gardens, layout, pal, state.horses, now, nf);
+
+    // Wild horse visitor
+    if (state.horses && state.horses.wild) {
+      drawWildHorse(ctx, state.horses.wild, W, gardenTop, state.time.elapsed, now);
+    }
+
+    // Selected flower indicator
+    drawSelectedFlower(ctx, W, H, uiBarH, state.selectedFlower, pal);
+
+    // Tutorial hint
+    if (state._showTutorial) {
+      drawTutorialHint(ctx, W, H, uiBarH, gardenTop, layout, now);
+    }
   }
 
   // Bottom HUD bar
   drawHUD(ctx, W, H, uiBarH, state.inventory, pal, nf);
 
-  // Selected flower indicator (above HUD)
-  drawSelectedFlower(ctx, W, H, uiBarH, state.selectedFlower, pal);
-
-  // Tutorial hint (first play — shown via state flag set externally)
-  if (state._showTutorial) {
-    drawTutorialHint(ctx, W, H, uiBarH, gardenTop, layout, now);
-  }
-
   // Fireflies at night
   if (nf > 0.3) {
     drawFireflies(ctx, W, H, gardenTop, nf, now);
   }
+}
+
+// ── Farm view (zoomed-out) ────────────────────────────────────────────────────
+
+function drawFarmView(ctx, W, H, farm, uiBarH, gardenTop, pal, nf, now, inventory) {
+  const plots = farm.plots;
+  const totalTiles = plots.length + 1; // +1 for the "buy" tile
+
+  // Tile grid: up to 3 columns
+  const cols = Math.min(3, totalTiles);
+  const rows = Math.ceil(totalTiles / cols);
+  const pad = 16;
+  const gap = 12;
+  const areaTop = gardenTop + 8;
+  const areaBottom = H - uiBarH - 8;
+  const areaW = W - pad * 2;
+  const areaH = areaBottom - areaTop;
+
+  const tileW = Math.floor((areaW - gap * (cols - 1)) / cols);
+  const tileH = Math.floor((areaH - gap * (rows - 1)) / rows);
+
+  const totalGridW = cols * tileW + gap * (cols - 1);
+  const startX = pad + Math.floor((areaW - totalGridW) / 2);
+
+  for (let i = 0; i < totalTiles; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const tx = startX + col * (tileW + gap);
+    const ty = areaTop + row * (tileH + gap);
+
+    if (i < plots.length) {
+      drawFarmTile(ctx, plots[i], i, tx, ty, tileW, tileH, farm.activePlot, pal, nf, now);
+    } else {
+      drawBuyPlotTile(ctx, tx, ty, tileW, tileH, plots.length, inventory, pal, nf, now);
+    }
+  }
+
+  // "Farm View" label at top
+  ctx.save();
+  ctx.fillStyle = nf > 0.5 ? '#E8D5B0' : '#3E2723';
+  ctx.font = 'bold 14px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Your Farm', W / 2, gardenTop - 10);
+  ctx.restore();
+}
+
+function drawFarmTile(ctx, plot, plotIdx, tx, ty, tw, th, activePlot, pal, nf, now) {
+  const isActive = plotIdx === activePlot;
+
+  // Tile background — lush green meadow
+  const grassBase = nf > 0.5 ? '#1A3A18' : '#4A7C3A';
+  ctx.fillStyle = grassBase;
+  ctx.fillRect(tx, ty, tw, th);
+
+  // Grass texture: subtle vertical lines
+  ctx.fillStyle = nf > 0.5 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.07)';
+  for (let gx = tx + 4; gx < tx + tw - 2; gx += 5) {
+    ctx.fillRect(gx, ty + 2, 1, th - 4);
+  }
+
+  // Mini garden dots
+  const gardens = plot.gardens;
+  const gardenCount = gardens.length;
+  const miniCols = Math.min(gardenCount, 5);
+  const miniRows = Math.ceil(gardenCount / miniCols);
+  const dotPad = 4;
+  const dotArea = Math.min(tw - dotPad * 2, th - 22 - dotPad);
+  const dotGap = 2;
+  const dotW = Math.floor((dotArea - dotGap * (miniCols - 1)) / miniCols);
+  const dotH = miniRows > 1 ? Math.floor((dotArea * 0.6 - dotGap * (miniRows - 1)) / miniRows) : dotW;
+  const dotStartX = tx + dotPad + Math.floor(((tw - dotPad * 2) - (miniCols * dotW + (miniCols - 1) * dotGap)) / 2);
+  const dotStartY = ty + 14 + Math.floor(((th - 22 - dotPad) - (miniRows * dotH + (miniRows - 1) * dotGap)) / 2);
+
+  for (let gi = 0; gi < gardenCount; gi++) {
+    const g = gardens[gi];
+    const gc = gi % miniCols;
+    const gr = Math.floor(gi / miniCols);
+    const dx = dotStartX + gc * (dotW + dotGap);
+    const dy = dotStartY + gr * (dotH + dotGap);
+
+    // Color based on garden state
+    let dotColor;
+    if (g.state === PLOT_STATE.EMPTY) {
+      dotColor = nf > 0.5 ? '#2A4A28' : '#5A8C4A';
+    } else if (g.state === PLOT_STATE.PLANTED) {
+      dotColor = '#7B5033';
+    } else if (g.state === PLOT_STATE.WATERED) {
+      const flower = FLOWERS[g.flowerId];
+      dotColor = flower ? flower.colors.sprout : '#66BB6A';
+    } else { // READY
+      const flower = FLOWERS[g.flowerId];
+      dotColor = flower ? flower.colors.bloom : '#FFD54F';
+    }
+    ctx.fillStyle = dotColor;
+    ctx.fillRect(dx, dy, Math.max(2, dotW), Math.max(2, dotH));
+  }
+
+  // Plot label
+  ctx.fillStyle = nf > 0.5 ? '#A8C8A0' : '#2A4A1A';
+  ctx.font = `bold ${Math.min(11, Math.floor(tw * 0.14))}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText(`Plot ${plotIdx + 1}`, tx + tw / 2, ty + 3);
+
+  // Garden count
+  ctx.fillStyle = nf > 0.5 ? '#7A9870' : '#3A6A2A';
+  ctx.font = `${Math.min(9, Math.floor(tw * 0.11))}px monospace`;
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(`${gardenCount} gardens`, tx + tw / 2, ty + th - 2);
+  ctx.textAlign = 'left';
+
+  // Active highlight border
+  if (isActive) {
+    ctx.strokeStyle = '#FFD54F';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(tx + 1, ty + 1, tw - 2, th - 2);
+  } else {
+    ctx.strokeStyle = nf > 0.5 ? '#2A5A28' : '#386828';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(tx, ty, tw, th);
+  }
+}
+
+function drawBuyPlotTile(ctx, tx, ty, tw, th, plotCount, inventory, pal, nf, now) {
+  const cost = PLOT_BUY_COSTS[Math.min(plotCount - 1, PLOT_BUY_COSTS.length - 1)];
+  const canAfford = inventory.coins >= cost;
+
+  // Dashed border style background
+  ctx.fillStyle = nf > 0.5 ? '#1A2A18' : '#3A5A2A';
+  ctx.fillRect(tx, ty, tw, th);
+
+  // Dashed border
+  ctx.save();
+  ctx.strokeStyle = canAfford ? '#A5D6A7' : '#5A7A5A';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 4]);
+  ctx.strokeRect(tx + 2, ty + 2, tw - 4, th - 4);
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // "+" symbol
+  const pulse = 0.75 + 0.25 * Math.sin(now / 600);
+  ctx.save();
+  ctx.globalAlpha = canAfford ? pulse : 0.45;
+  ctx.fillStyle = canAfford ? '#A5D6A7' : '#6A8A6A';
+  ctx.font = `bold ${Math.floor(tw * 0.35)}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('+', tx + tw / 2, ty + th / 2 - 8);
+
+  ctx.font = `bold ${Math.min(10, Math.floor(tw * 0.13))}px monospace`;
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(`${cost}c`, tx + tw / 2, ty + th - 3);
+  ctx.restore();
 }
 
 function drawSky(ctx, W, H, skyColor, nf) {
@@ -404,38 +582,64 @@ function drawCampfire(ctx, W, gardenTop, nf, now) {
   ctx.restore();
 }
 
-function drawPlots(ctx, plots, layout, pal, horses, now) {
+function drawPlots(ctx, plots, layout, pal, horses, now, nf) {
   const hasPalomino = horses && isTamed(horses, 'goldenPalomino');
   const hasPaint = horses && isTamed(horses, 'paintHorse');
   for (let i = 0; i < plots.length; i++) {
     const plot = plots[i];
     const rect = plotRect(i, layout);
-    drawSinglePlot(ctx, plot, rect, pal, hasPalomino, hasPaint, now);
+    drawSinglePlot(ctx, plot, rect, pal, hasPalomino, hasPaint, now, nf || 0);
   }
 }
 
-function drawSinglePlot(ctx, plot, rect, pal, hasPalomino, hasPaint, now) {
+function drawSinglePlot(ctx, plot, rect, pal, hasPalomino, hasPaint, now, nf) {
   const { x, y, w, h } = rect;
 
-  // Plot border (slightly darker than soil)
-  ctx.fillStyle = pal.plotSoil;
+  // Prairie-style garden: green grassy base
+  // Border — slightly darker green
+  const isNight = (nf || 0) > 0.5;
+  const borderColor = plot.state === PLOT_STATE.EMPTY
+    ? (isNight ? '#1A3A18' : '#3A6A2A')
+    : '#2A5A1A';
+  ctx.fillStyle = borderColor;
   ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
 
-  // Soil fill
-  ctx.fillStyle = (plot.state === PLOT_STATE.EMPTY) ? pal.plotEmpty : pal.plotSoil;
+  // Garden base fill
+  let baseFill;
+  if (plot.state === PLOT_STATE.EMPTY) {
+    // Empty = fresh green grass
+    baseFill = lerpColor('#5A9A3A', '#3A6A20', 0.3);
+  } else if (plot.state === PLOT_STATE.PLANTED) {
+    // Planted = slightly turned earth tone (still greenish)
+    baseFill = lerpColor('#6A7A3A', '#5A6828', 0.4);
+  } else {
+    // Watered / Ready = richer, deeper green
+    baseFill = lerpColor('#4A8A30', '#3A7020', 0.3);
+  }
+  ctx.fillStyle = baseFill;
   ctx.fillRect(x, y, w, h);
 
-  // Soil texture dots — more naturalistic pattern
-  if (plot.state !== PLOT_STATE.EMPTY) {
-    ctx.fillStyle = 'rgba(0,0,0,0.15)';
-    // Diagonal texture
+  // Grass texture — tiny dots/tufts for empty plots
+  if (plot.state === PLOT_STATE.EMPTY) {
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    for (let dx = 3; dx < w - 2; dx += 5) {
+      ctx.fillRect(x + dx, y + 2, 1, Math.floor(h * 0.3));
+    }
+    ctx.fillStyle = 'rgba(0,80,0,0.12)';
+    for (let dx = 5; dx < w - 2; dx += 7) {
+      for (let dy = 3; dy < h - 2; dy += 7) {
+        ctx.fillRect(x + dx, y + dy, 2, 1);
+      }
+    }
+  } else {
+    // Soil/planted texture
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
     for (let dx = 3; dx < w - 2; dx += 6) {
       for (let dy = 3; dy < h - 2; dy += 6) {
         ctx.fillRect(x + dx, y + dy, 2, 1);
       }
     }
-    // Lighter highlights
-    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
     for (let dx = 6; dx < w - 2; dx += 9) {
       for (let dy = 6; dy < h - 2; dy += 9) {
         ctx.fillRect(x + dx, y + dy, 1, 1);
@@ -443,9 +647,13 @@ function drawSinglePlot(ctx, plot, rect, pal, hasPalomino, hasPaint, now) {
     }
   }
 
-  // Watering shimmer
-  if (plot.state === PLOT_STATE.WATERED || plot.state === PLOT_STATE.READY) {
-    ctx.fillStyle = 'rgba(100,180,255,0.10)';
+  // Watering shimmer — bluish for watered, golden for ready
+  if (plot.state === PLOT_STATE.WATERED) {
+    ctx.fillStyle = 'rgba(80,200,120,0.12)';
+    ctx.fillRect(x, y, w, h);
+  }
+  if (plot.state === PLOT_STATE.READY) {
+    ctx.fillStyle = 'rgba(100,200,80,0.12)';
     ctx.fillRect(x, y, w, h);
   }
 

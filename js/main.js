@@ -1,10 +1,12 @@
 // main.js — Boot, game loop, state init, input handling.
 
-import { STARTING_COINS, STARTING_SEEDS, PLOT_COUNT, PLOT_STATE, FLOWERS, FLOWER_LIST, HORSES, PERKS } from './data.js';
-import { createPlots, hydrateGarden, plantSeed, waterPlot, harvestPlotWithPerks, tickGarden, plotAtPoint } from './garden.js';
+import { STARTING_COINS, STARTING_SEEDS, PLOT_STATE, FLOWERS, FLOWER_LIST, HORSES, PERKS,
+         STARTING_GARDENS, MAX_GARDENS_PER_PLOT, GARDEN_BUY_COSTS, PLOT_BUY_COSTS } from './data.js';
+import { hydrateFarmPlot, createFarmPlot, plantSeed, waterPlot,
+         harvestPlotWithPerks, tickGarden, gardenAtPoint } from './garden.js';
 import { render, computeLayout, triggerPlotAnim } from './render.js';
 import { initMarket, isMarketOpen } from './market.js';
-import { saveGame, loadGame } from './save.js';
+import { saveGame, loadGame, needsMigration } from './save.js';
 import { defaultHorsesState, hydrateHorses, tickHorses, feedHorse } from './horses.js';
 import { defaultJournalState, hydrateJournal, initJournal, initStable, isJournalOpen, isStableOpen, addJournalEntry } from './journal.js';
 
@@ -17,8 +19,10 @@ function defaultState() {
       seeds: { ...STARTING_SEEDS },
       flowers: {},
     },
-    garden: {
-      plots: createPlots(),
+    farm: {
+      plots: [createFarmPlot(0, STARTING_GARDENS)],
+      activePlot: 0,
+      viewMode: 'plot',  // 'plot' | 'farm'
     },
     horses:  defaultHorsesState(),
     journal: defaultJournalState(),
@@ -33,7 +37,6 @@ function defaultState() {
 
 function mergeState(saved) {
   const base = defaultState();
-  // Show tutorial on very first play (no save data exists yet)
   base._showTutorial = !saved;
 
   if (!saved) return base;
@@ -44,8 +47,20 @@ function mergeState(saved) {
     base.inventory.flowers = saved.inventory.flowers ?? base.inventory.flowers;
   }
 
-  if (saved.garden && saved.garden.plots) {
-    base.garden.plots = hydrateGarden(saved.garden.plots, PLOT_COUNT);
+  // Phase 5 multi-plot structure
+  if (saved.farm && Array.isArray(saved.farm.plots)) {
+    base.farm.plots      = saved.farm.plots.map((p, i) => hydrateFarmPlot(p, i));
+    base.farm.activePlot = saved.farm.activePlot ?? 0;
+    base.farm.viewMode   = saved.farm.viewMode   ?? 'plot';
+  } else if (needsMigration(saved)) {
+    // Migrate from Phase 1-4: garden.plots was a flat gardens array
+    // Wrap it in a single farm plot
+    const migratedGardens = saved.garden.plots;
+    const gc = migratedGardens.length;
+    const migratedPlot = hydrateFarmPlot({ id: 0, gardenCount: gc, gardens: migratedGardens }, 0);
+    base.farm.plots = [migratedPlot];
+    base.farm.activePlot = 0;
+    base.farm.viewMode = 'plot';
   }
 
   base.horses  = hydrateHorses(saved.horses);
@@ -66,10 +81,21 @@ const ctx    = canvas.getContext('2d');
 let state    = mergeState(loadGame());
 let layout   = null;
 
+function activePlotData() {
+  return state.farm.plots[state.farm.activePlot];
+}
+
+function activeGardens() {
+  const p = activePlotData();
+  return p ? p.gardens : [];
+}
+
 function resizeCanvas() {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
-  layout = computeLayout(canvas.width, canvas.height);
+  const gc = activePlotData() ? activePlotData().gardenCount : STARTING_GARDENS;
+  layout = computeLayout(canvas.width, canvas.height, gc);
+  updateBuyGardenBtn();
 }
 
 window.addEventListener('resize', resizeCanvas);
@@ -87,14 +113,13 @@ if ('serviceWorker' in navigator) {
 
 const floatingTexts = [];
 
-function showFloatingText(plotIndex, text, color) {
+function showFloatingText(gardenIndex, text, color) {
   if (!layout) return;
-  const { originX, originY, plotW, plotH, gap } = layout;
-  const col = plotIndex % 4;
-  const row = Math.floor(plotIndex / 4);
+  const { originX, originY, plotW, plotH, gap, cols } = layout;
+  const col = gardenIndex % cols;
+  const row = Math.floor(gardenIndex / cols);
   const px = originX + col * (plotW + gap) + plotW / 2;
   const py = originY + row * (plotH + gap) + plotH / 2;
-  // Coin texts get gold color, seed texts get green
   const autoColor = text.startsWith('+') && text.includes('coins') ? '#FFD54F'
                   : text.includes('seed') ? '#A5D6A7'
                   : null;
@@ -104,14 +129,11 @@ function showFloatingText(plotIndex, text, color) {
 function drawFloatingTexts(dt) {
   for (let i = floatingTexts.length - 1; i >= 0; i--) {
     const ft = floatingTexts[i];
-    // Bouncy easing: fast up then slow down
     ft.life -= dt * 1.2;
     if (ft.life <= 0) { floatingTexts.splice(i, 1); continue; }
-    // Ease upward — faster start
     const age = 1.0 - ft.life;
     ft.y -= (2.5 - age * 1.5);
     ctx.save();
-    // Scale bounce on fresh texts
     const scale = ft.life > 0.85 ? (1 + (1 - ft.life) * 2) : 1;
     ctx.globalAlpha  = Math.min(1, ft.life * 1.5);
     ctx.font         = `bold ${Math.round(14 * scale)}px monospace`;
@@ -137,7 +159,11 @@ function tick(now) {
   state.time.elapsed  += dt;
   state.totalPlaytime += dt;
 
-  tickGarden(state.garden.plots, Date.now(), state.horses);
+  // Tick all plots' gardens (not just active — plants grow in background too)
+  for (const plot of state.farm.plots) {
+    tickGarden(plot.gardens, Date.now(), state.horses);
+  }
+
   tickHorses(state.horses, state.time.elapsed, state.inventory);
   render(ctx, state, layout, now);
   drawFloatingTexts(dt);
@@ -153,7 +179,6 @@ requestAnimationFrame(tick);
 function handleTap(clientX, clientY) {
   if (isMarketOpen() || isJournalOpen() || isStableOpen()) return;
 
-  // If a wild horse is visiting and not yet fed, any tap opens the feed picker
   if (state.horses.wild && !state.horses.wild.fed) {
     openFeedPicker();
     return;
@@ -163,31 +188,80 @@ function handleTap(clientX, clientY) {
   const x = (clientX - rect.left) * (canvas.width  / rect.width);
   const y = (clientY - rect.top)  * (canvas.height / rect.height);
 
-  const plotIdx = plotAtPoint(x, y, layout);
-  if (plotIdx === -1) return;
+  if (state.farm.viewMode === 'farm') {
+    handleFarmViewTap(x, y);
+    return;
+  }
 
-  handlePlotTap(state.garden.plots[plotIdx]);
+  const gardenIdx = gardenAtPoint(x, y, layout);
+  if (gardenIdx === -1) return;
+
+  const gardens = activeGardens();
+  if (!gardens[gardenIdx]) return;
+  handleGardenTap(gardens[gardenIdx]);
 }
 
-function handlePlotTap(plot) {
-  const now = Date.now();
+function handleFarmViewTap(x, y) {
+  const plots = state.farm.plots;
+  const totalTiles = plots.length + 1;
 
-  if (plot.state === PLOT_STATE.READY) {
-    // Store flowerId before harvest clears it
-    const harvestFlowerId = plot.flowerId;
-    const harvestIndex = plot.index;
+  const W = canvas.width;
+  const H = canvas.height;
+  const uiBarH = layout.uiBarH;
+  const gardenTop = layout.gardenTop;
+
+  const cols = Math.min(3, totalTiles);
+  const rows = Math.ceil(totalTiles / cols);
+  const pad = 16;
+  const gap = 12;
+  const areaTop = gardenTop + 8;
+  const areaBottom = H - uiBarH - 8;
+  const areaW = W - pad * 2;
+  const areaH = areaBottom - areaTop;
+  const tileW = Math.floor((areaW - gap * (cols - 1)) / cols);
+  const tileH = Math.floor((areaH - gap * (rows - 1)) / rows);
+  const totalGridW = cols * tileW + gap * (cols - 1);
+  const startX = pad + Math.floor((areaW - totalGridW) / 2);
+
+  for (let i = 0; i < totalTiles; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const tx = startX + col * (tileW + gap);
+    const ty = areaTop + row * (tileH + gap);
+
+    if (x >= tx && x < tx + tileW && y >= ty && y < ty + tileH) {
+      if (i < plots.length) {
+        // Zoom into this plot
+        state.farm.activePlot = i;
+        zoomIn();
+      } else {
+        // Buy new plot
+        tryBuyPlot();
+      }
+      return;
+    }
+  }
+}
+
+function handleGardenTap(garden) {
+  const now = Date.now();
+  const gardens = activeGardens();
+
+  if (garden.state === PLOT_STATE.READY) {
+    const harvestFlowerId = garden.flowerId;
+    const harvestIndex = garden.index;
     triggerPlotAnim(harvestIndex, 'harvest', { flowerId: harvestFlowerId });
-    const result = harvestPlotWithPerks(plot, state.garden.plots, state.horses);
+    const result = harvestPlotWithPerks(garden, gardens, state.horses);
     if (result) {
       const { flowerId, count, bonusCoins, freeSeed, autoPlowedIndices } = result;
       state.inventory.flowers[flowerId] = (state.inventory.flowers[flowerId] || 0) + count;
       if (freeSeed) {
         state.inventory.seeds[freeSeed] = (state.inventory.seeds[freeSeed] || 0) + 1;
-        showFloatingText(plot.index, `+1 ${FLOWERS[freeSeed].name} seed!`);
+        showFloatingText(garden.index, `+1 ${FLOWERS[freeSeed].name} seed!`);
       }
       if (bonusCoins > 0) {
         state.inventory.coins += bonusCoins;
-        showFloatingText(plot.index, `+${bonusCoins} coins!`);
+        showFloatingText(garden.index, `+${bonusCoins} coins!`);
       }
       if (autoPlowedIndices.length > 0) {
         for (const idx of autoPlowedIndices) {
@@ -197,22 +271,21 @@ function handlePlotTap(plot) {
       const harvestLabel = count > 1 ? `+${count} ${FLOWERS[flowerId].name}!` : `+1 ${FLOWERS[flowerId].name}`;
       saveGame(state);
       updateFlowerSelector();
-      showFloatingText(plot.index, harvestLabel);
-      // Dismiss tutorial after first harvest
+      showFloatingText(garden.index, harvestLabel);
       state._showTutorial = false;
     }
     return;
   }
 
-  if (plot.state === PLOT_STATE.WATERED) {
-    showFloatingText(plot.index, 'Growing...');
+  if (garden.state === PLOT_STATE.WATERED) {
+    showFloatingText(garden.index, 'Growing...');
     return;
   }
 
-  if (plot.state === PLOT_STATE.PLANTED) {
-    if (waterPlot(plot, now)) {
+  if (garden.state === PLOT_STATE.PLANTED) {
+    if (waterPlot(garden, now)) {
       saveGame(state);
-      showFloatingText(plot.index, 'Watered!');
+      showFloatingText(garden.index, 'Watered!');
     }
     return;
   }
@@ -221,28 +294,27 @@ function handlePlotTap(plot) {
   if (!state.selectedFlower) {
     const available = Object.keys(state.inventory.seeds).filter(id => state.inventory.seeds[id] > 0);
     if (available.length === 0) {
-      showFloatingText(plot.index, 'Buy seeds!');
+      showFloatingText(garden.index, 'Buy seeds!');
       return;
     }
     state.selectedFlower = available[0];
     updateFlowerSelector();
   }
 
-  if (plantSeed(plot, state.selectedFlower, state, now)) {
-    triggerPlotAnim(plot.index, 'plant');
+  if (plantSeed(garden, state.selectedFlower, state, now)) {
+    triggerPlotAnim(garden.index, 'plant');
     state._showTutorial = false;
     saveGame(state);
     updateFlowerSelector();
-    showFloatingText(plot.index, 'Planted!');
+    showFloatingText(garden.index, 'Planted!');
     if (!(state.inventory.seeds[state.selectedFlower] > 0)) {
       state.selectedFlower = null;
       updateFlowerSelector();
     }
   } else {
-    // Out of selected seed — switch
     const available = Object.keys(state.inventory.seeds).filter(id => state.inventory.seeds[id] > 0);
     if (available.length === 0) {
-      showFloatingText(plot.index, 'Buy seeds!');
+      showFloatingText(garden.index, 'Buy seeds!');
     } else {
       state.selectedFlower = available[0];
       updateFlowerSelector();
@@ -259,6 +331,132 @@ canvas.addEventListener('touchstart', (e) => {
 canvas.addEventListener('click', (e) => {
   handleTap(e.clientX, e.clientY);
 });
+
+// ── Zoom mechanic ─────────────────────────────────────────────────────────────
+
+function zoomOut() {
+  state.farm.viewMode = 'farm';
+  // Hide flower selector in farm view
+  const sel = document.getElementById('flower-selector');
+  if (sel) sel.style.display = 'none';
+  const buyBtn = document.getElementById('buy-garden-btn');
+  if (buyBtn) buyBtn.style.display = 'none';
+  // Swap zoom button icon
+  const zoomBtn = document.getElementById('zoom-btn');
+  if (zoomBtn) zoomBtn.textContent = 'Plot';
+  saveGame(state);
+}
+
+function zoomIn() {
+  state.farm.viewMode = 'plot';
+  const sel = document.getElementById('flower-selector');
+  if (sel) sel.style.display = '';
+  // Recompute layout for the new active plot's garden count
+  const gc = activePlotData() ? activePlotData().gardenCount : STARTING_GARDENS;
+  layout = computeLayout(canvas.width, canvas.height, gc);
+  updateBuyGardenBtn();
+  const zoomBtn = document.getElementById('zoom-btn');
+  if (zoomBtn) zoomBtn.textContent = 'Farm';
+  updatePlotLabel();
+  saveGame(state);
+}
+
+function updatePlotLabel() {
+  const label = document.getElementById('plot-label');
+  if (label) {
+    const idx = state.farm.activePlot;
+    label.textContent = state.farm.plots.length > 1 ? `Plot ${idx + 1}` : '';
+  }
+}
+
+document.getElementById('zoom-btn').addEventListener('click', () => {
+  if (state.farm.viewMode === 'plot') {
+    zoomOut();
+  } else {
+    zoomIn();
+  }
+});
+
+// Initialize zoom state on load
+if (state.farm.viewMode === 'farm') {
+  zoomOut();
+} else {
+  zoomIn();
+}
+
+// ── Buy Garden button ─────────────────────────────────────────────────────────
+
+function updateBuyGardenBtn() {
+  const btn = document.getElementById('buy-garden-btn');
+  if (!btn) return;
+  if (state.farm.viewMode !== 'plot') {
+    btn.style.display = 'none';
+    return;
+  }
+  const plot = activePlotData();
+  if (!plot) { btn.style.display = 'none'; return; }
+
+  const gc = plot.gardenCount;
+  if (gc >= MAX_GARDENS_PER_PLOT) {
+    btn.style.display = 'none';
+    return;
+  }
+
+  const costIdx = Math.floor(gc / 5) - 1;
+  const cost = GARDEN_BUY_COSTS[Math.min(costIdx, GARDEN_BUY_COSTS.length - 1)];
+  btn.style.display = '';
+  btn.textContent = `+Garden ${cost}c`;
+  btn.disabled = state.inventory.coins < cost;
+}
+
+document.getElementById('buy-garden-btn').addEventListener('click', () => {
+  const plot = activePlotData();
+  if (!plot) return;
+
+  const gc = plot.gardenCount;
+  if (gc >= MAX_GARDENS_PER_PLOT) return;
+
+  const costIdx = Math.floor(gc / 5) - 1;
+  const cost = GARDEN_BUY_COSTS[Math.min(costIdx, GARDEN_BUY_COSTS.length - 1)];
+  if (state.inventory.coins < cost) return;
+
+  state.inventory.coins -= cost;
+
+  // Add 5 more gardens
+  const newCount = gc + 5;
+  plot.gardenCount = newCount;
+  // Append new garden slots
+  for (let i = gc; i < newCount; i++) {
+    plot.gardens.push({ index: i, state: PLOT_STATE.EMPTY, flowerId: null,
+      plantedAt: 0, growTime: 0, waterTime: 0, stage: 0, autoPlow: 0 });
+  }
+
+  // Recompute layout for new garden count
+  layout = computeLayout(canvas.width, canvas.height, newCount);
+  updateBuyGardenBtn();
+  saveGame(state);
+});
+
+function tryBuyPlot() {
+  const plotCount = state.farm.plots.length;
+  const cost = PLOT_BUY_COSTS[Math.min(plotCount - 1, PLOT_BUY_COSTS.length - 1)];
+  if (state.inventory.coins < cost) {
+    // Flash a message — use center of screen
+    floatingTexts.push({
+      text: `Need ${cost}c`,
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      life: 1.0,
+      color: '#FFAB91',
+    });
+    return;
+  }
+
+  state.inventory.coins -= cost;
+  const newPlot = createFarmPlot(plotCount, STARTING_GARDENS);
+  state.farm.plots.push(newPlot);
+  saveGame(state);
+}
 
 // ── Flower selector (HTML overlay) ────────────────────────────────────────────
 
@@ -284,16 +482,16 @@ function updateFlowerSelector() {
     bar.appendChild(btn);
   }
 
-  // Deselect if seed gone
   if (state.selectedFlower && !(state.inventory.seeds[state.selectedFlower] > 0)) {
     state.selectedFlower = null;
   }
+  updateBuyGardenBtn();
 }
 
 updateFlowerSelector();
+updatePlotLabel();
 
 // ── Feed picker (HTML overlay) ─────────────────────────────────────────────────
-// Appears when a horse is visiting. If already tamed, feeding its fav flower levels up its perk.
 
 function openFeedPicker() {
   const overlay = document.getElementById('feed-overlay');
@@ -302,7 +500,6 @@ function openFeedPicker() {
   const wild = state.horses.wild;
   const isTamedVisitor = wild && state.horses.tamed.some(t => t.horseId === wild.horseId);
 
-  // Update the feed panel hint
   const hint = document.querySelector('#feed-panel .feed-hint');
   if (hint && wild) {
     const horse = HORSES[wild.horseId];
@@ -355,17 +552,14 @@ document.getElementById('feed-overlay').addEventListener('click', (e) => {
 function doFeedHorse(flowerId) {
   if (!state.inventory.flowers[flowerId] || state.inventory.flowers[flowerId] < 1) return;
 
-  // Capture horseId before feeding mutates the wild state
   const horseId = state.horses.wild ? state.horses.wild.horseId : null;
 
-  // Consume one flower from inventory
   state.inventory.flowers[flowerId] -= 1;
   if (state.inventory.flowers[flowerId] <= 0) delete state.inventory.flowers[flowerId];
 
   const result = feedHorse(state.horses, flowerId, state.time.elapsed);
   if (!result) return;
 
-  // Record journal entry
   if (horseId) {
     addJournalEntry(state.journal, horseId, flowerId, result.success);
   }
@@ -403,7 +597,6 @@ function drawHorseFloatingTexts(dt) {
     const ft = horseFloatingTexts[i];
     ft.life -= dt * 0.55;
     if (ft.life <= 0) { horseFloatingTexts.splice(i, 1); continue; }
-    // Bouncy rise
     ft.y -= 0.7 + (1 - ft.life) * 0.3;
     ctx.save();
     const scale = ft.life > 0.88 ? (1 + (1 - ft.life) * 1.5) : 1;

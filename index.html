@@ -18,8 +18,15 @@
   <!-- Flower selector bar — above canvas HUD, below market button -->
   <div id="flower-selector" aria-label="Seed selector"></div>
 
+  <!-- Buy Garden button — shows when zoomed into a plot with room to expand -->
+  <button id="buy-garden-btn" aria-label="Buy more garden space" style="display:none"></button>
+
+  <!-- Active plot label — shows when multiple plots exist -->
+  <span id="plot-label" aria-live="polite"></span>
+
   <!-- Top-right button row -->
   <div id="top-buttons">
+    <button id="zoom-btn"    aria-label="Zoom to farm view">Farm</button>
     <button id="stable-btn"  aria-label="Open stable">Stable</button>
     <button id="journal-btn" aria-label="Open journal">Journal</button>
     <button id="market-btn"  aria-label="Open market">Market</button>

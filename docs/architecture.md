@@ -250,8 +250,45 @@ Make it feel like a gift.
 
 **Done when:** You'd be proud to hand her the phone.
 
+### Phase 5 — Multi-Plot Farm + Zoom Mechanic ✓ COMPLETE
+
+**The new structure:**
+```
+Farm (zoomed-out view — see all plots)
+  └── Plot of Land (purchasable)
+        └── 5–25 Gardens (individual flower spots)
+```
+
+**State restructure:**
+- `state.farm.plots` — array of plot objects `{ id, gardenCount, gardens: [...] }`
+- `state.farm.activePlot` — index of currently viewed plot
+- `state.farm.viewMode` — `'plot'` (zoomed in) or `'farm'` (zoomed out)
+- Gardens are the old "plot" objects (plant state, flower, growth, etc.)
+
+**Garden expansion:** Buy 5 more gardens per purchase (50 / 100 / 200 / 400 coins), up to 25 max. Layout always uses 5 columns; rows expand as you buy.
+
+**New plot purchasing:** Buy new plots from the farm view (500 / 1500 / 4000 / 10000... coins). Each starts with 5 gardens.
+
+**Zoom mechanic:** "Farm" button in top bar zooms out. Tap a plot tile to zoom in. Tap "+" tile to buy a new plot. Flower selector and buy-garden button are hidden in farm view.
+
+**Prairie-style fields:** Gardens are green grassy patches instead of brown dirt. Empty = fresh grass, planted = earthy green, watered/ready = rich green. Flowers pop against the meadow base.
+
+**Migration:** Old Phase 1-4 saves (flat `garden.plots` array) are automatically migrated to a single-plot farm structure on first load.
+
+**Files changed:**
+- `js/data.js` — added STARTING_GARDENS, MAX_GARDENS_PER_PLOT, GARDEN_BUY_COSTS, PLOT_BUY_COSTS; updated GRID_COLS to 5
+- `js/garden.js` — full rewrite: gardens vs farm plots, variable count, new exports (createFarmPlot, hydrateFarmPlot, gardenAtPoint, gardenCols, gardenRows)
+- `js/render.js` — computeLayout now takes gardenCount; farm view (drawFarmView, drawFarmTile, drawBuyPlotTile); prairie grass colors for gardens; drawPlots/drawSinglePlot pass nf for night tinting
+- `js/main.js` — new state structure, zoom mechanic, buy-garden/buy-plot logic, adapted all tap handlers
+- `js/save.js` — saves farm structure, needsMigration export, migration path
+- `index.html` — zoom button, buy-garden button, plot label
+- `css/style.css` — buy-garden button, plot label styles
+- `sw.js` — bumped to v5
+
+**Done when:** You can zoom out, see your whole farm, tap plots to zoom in, and expand with new gardens and new land.
+
 ## Save System
 
 Single JSON blob in localStorage under `pony-pastures-save`. Saved on every meaningful action (debounced to ~1s). Loaded on boot. No cloud sync — it lives on her phone.
 
-Save includes: garden state, inventory, horse trust levels, horse perk levels, journal entries, total playtime.
+Save includes: farm state (all plots + gardens), inventory, horse trust levels, horse perk levels, journal entries, total playtime.

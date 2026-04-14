@@ -1,5 +1,7 @@
 // save.js — localStorage persistence for the single game state object.
-// Saved fields: inventory, garden, horses, journal, time, totalPlaytime.
+// Saved fields: inventory, farm, horses, journal, time, totalPlaytime.
+// Phase 5: saves farm.plots[] nested structure.
+// Migration: detects old Phase 1-4 saves (garden.plots flat array) and converts.
 
 const SAVE_KEY = 'pony-pastures-save';
 let saveTimer = null;
@@ -9,12 +11,15 @@ export function saveGame(state) {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     try {
-      // Exclude transient wild visitor reaction state — re-spawn on load is fine
       const toSave = {
         inventory:     state.inventory,
-        garden:        state.garden,
+        farm: {
+          plots:       state.farm.plots,
+          activePlot:  state.farm.activePlot,
+          viewMode:    state.farm.viewMode,
+        },
         horses: {
-          wild:        null,    // don't persist a visiting horse mid-visit
+          wild:        null,
           tamed:       state.horses.tamed,
           trust:       state.horses.trust,
           perkLevels:  state.horses.perkLevels,
@@ -40,6 +45,12 @@ export function loadGame() {
     console.warn('Load failed, starting fresh:', e);
     return null;
   }
+}
+
+// Detect old Phase 1-4 save format (has garden.plots flat array instead of farm.plots)
+// Returns true if save needs migration
+export function needsMigration(saved) {
+  return saved && saved.garden && Array.isArray(saved.garden.plots) && !saved.farm;
 }
 
 export function clearSave() {

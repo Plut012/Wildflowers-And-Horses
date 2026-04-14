@@ -130,10 +130,21 @@ export const FLOWER_LIST = Object.values(FLOWERS);
 export const STARTING_COINS = 40;
 export const STARTING_SEEDS = { daisy: 4, clover: 2 };
 
-// Grid layout
-export const GRID_COLS = 4;
-export const GRID_ROWS = 5;
-export const PLOT_COUNT = GRID_COLS * GRID_ROWS;
+// Grid layout — legacy constants kept for reference, dynamic layout now in render.js
+export const GRID_COLS = 5;   // always 5 columns in a plot
+export const GRID_ROWS = 1;   // starting rows (1 row = 5 gardens)
+export const PLOT_COUNT = GRID_COLS * GRID_ROWS; // starting garden count per plot
+
+// Multi-plot farm — Phase 5
+export const STARTING_GARDENS = 5;    // gardens in first plot on new game
+export const MAX_GARDENS_PER_PLOT = 25;
+
+// Cost to buy more gardens within a plot (escalating by current count)
+// gardens 5→10 costs 50, 10→15 costs 100, 15→20 costs 200, 20→25 costs 400
+export const GARDEN_BUY_COSTS = [50, 100, 200, 400]; // index = (currentCount/5 - 1)
+
+// Cost to buy new plots of land (escalating by plot index)
+export const PLOT_BUY_COSTS = [500, 1500, 4000, 10000, 25000, 60000, 150000];
 
 // Day/night cycle
 export const DAY_DURATION   = 180; // seconds for one full day→night→day cycle
