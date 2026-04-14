@@ -2,7 +2,7 @@
 
 ## Project
 
-Pony Pastures — a cozy PWA pixel-art horse farm game. Vanilla JS + Canvas, no frameworks, no build step. Phases 1–5 complete.
+Pony Pastures — a cozy PWA pixel-art horse farm game. Vanilla JS + Canvas, no frameworks, no build step. Phases 1–6 complete.
 
 ## Dev Commands
 
@@ -23,11 +23,11 @@ Pony Pastures — a cozy PWA pixel-art horse farm game. Vanilla JS + Canvas, no 
 - Test in Samsung Internet on Android — that's the target browser.
 - Animation state for plots lives in `_plotAnims` (module-level in render.js). Call `triggerPlotAnim(index, type, extra)` from main.js.
 - Tutorial hint is controlled by `state._showTutorial` (not persisted, resets on load if no save exists).
-- Service worker cache version is `pony-pastures-v5` — bump on any file change.
+- Service worker cache version is `pony-pastures-v6` — bump on any file change.
 
-## Architecture Notes (Phase 5)
+## Architecture Notes (Phase 6)
 
-**State structure (Phase 5):**
+**State structure (Phase 6):**
 ```
 state.farm.plots[]         — array of land plots
   plot.id                  — plot index
@@ -43,6 +43,7 @@ state.farm.plots[]         — array of land plots
     garden.autoPlow        — timestamp of last auto-plow sparkle
 state.farm.activePlot      — index of plot currently shown (zoomed in)
 state.farm.viewMode        — 'plot' (zoomed in) or 'farm' (zoomed out)
+state.horses.assignedTo    — { horseId: plotIndex | null } — where each tamed horse is assigned
 ```
 
 **Garden layout:** Always 5 columns. 5 gardens = 1 row, 10 = 2 rows, up to 25 = 5x5.
@@ -66,3 +67,6 @@ state.farm.viewMode        — 'plot' (zoomed in) or 'farm' (zoomed out)
 - `render.js` — Each flower type has a dedicated `draw*` function (drawDaisy, drawLavender, etc.) called from `drawBloom`.
 - `render.js` — Campfire is drawn by `drawCampfire`, meadow flowers by `drawMeadowFlowers`.
 - `generate-icons.js` + `generate-icons.html` — Two ways to regenerate icons if needed.
+- `js/stable.js` — Canvas-drawn stable overlay. `initStable(canvas, state, onSave)` wires it up. `renderStable(ctx, state, now)` called from main tick when `isStableOpen()`. `drawHorse` is exported from render.js and reused here.
+- Horse assignment: `assignHorse(horsesState, horseId, plotIndex)`, `getAssignedHorses(horsesState, plotIndex)`, `plotHorseCapacity(gardenCount)` in horses.js.
+- Per-plot perk resolution: pass `assignedHorseIds` array to `tickGarden`, `harvestPlotWithPerks`, `drawPlots`, and in market's `sellFlowers`.

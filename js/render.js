@@ -1,8 +1,8 @@
 // render.js — Canvas drawing: farm, plots, flowers, horses, day/night.
 
-import { PALETTE, PLOT_STATE, GRID_COLS, DAY_DURATION, NIGHT_FRACTION, FLOWERS, HORSES, PLOT_BUY_COSTS } from './data.js';
+import { PALETTE, PLOT_STATE, GRID_COLS, DAY_DURATION, NIGHT_FRACTION, FLOWERS, HORSES, HORSE_LIST, PLOT_BUY_COSTS } from './data.js';
 import { plotRect, gardenCols, gardenRows } from './garden.js';
-import { isTamed, getPerkLevel } from './horses.js';
+import { isTamed, getPerkLevel, getAssignedHorses } from './horses.js';
 
 // Lerp between two hex colours
 function lerpColor(hexA, hexB, t) {
@@ -134,7 +134,16 @@ export function render(ctx, state, layout, now) {
     const activePlot = farm ? farm.plots[farm.activePlot] : null;
     const gardens = activePlot ? activePlot.gardens : (state.garden ? state.garden.plots : []);
 
-    drawPlots(ctx, gardens, layout, pal, state.horses, now, nf);
+    const activePlotAssigned = state.horses ? getAssignedHorses(state.horses, state.farm.activePlot) : [];
+    drawPlots(ctx, gardens, layout, pal, state.horses, activePlotAssigned, now, nf);
+
+    // Assigned horses walking in the meadow strip below the gardens
+    if (state.horses && activePlot) {
+      const assignedIds = getAssignedHorses(state.horses, state.farm.activePlot);
+      if (assignedIds.length > 0) {
+        drawWalkingHorses(ctx, assignedIds, state.horses, W, H, uiBarH, layout, state.time.elapsed, now);
+      }
+    }
 
     // Wild horse visitor
     if (state.horses && state.horses.wild) {
@@ -582,9 +591,13 @@ function drawCampfire(ctx, W, gardenTop, nf, now) {
   ctx.restore();
 }
 
-function drawPlots(ctx, plots, layout, pal, horses, now, nf) {
-  const hasPalomino = horses && isTamed(horses, 'goldenPalomino');
-  const hasPaint = horses && isTamed(horses, 'paintHorse');
+function drawPlots(ctx, plots, layout, pal, horses, assignedIds, now, nf) {
+  function hasHorse(id) {
+    if (assignedIds && assignedIds.length > 0) return assignedIds.includes(id) && horses && isTamed(horses, id);
+    return horses && isTamed(horses, id);
+  }
+  const hasPalomino = hasHorse('goldenPalomino');
+  const hasPaint = hasHorse('paintHorse');
   for (let i = 0; i < plots.length; i++) {
     const plot = plots[i];
     const rect = plotRect(i, layout);
@@ -1214,7 +1227,7 @@ function drawTutorialHint(ctx, W, H, barH, gardenTop, layout, now) {
 // ── Horse rendering ───────────────────────────────────────────────────────────
 // Each horse has distinct visual character via markings, body shape, and size.
 
-function drawHorse(ctx, horseId, colors, cx, groundY, scale, facing, anim) {
+export function drawHorse(ctx, horseId, colors, cx, groundY, scale, facing, anim) {
   const s = scale;
   const fl = facing === 'left' ? -1 : 1;
 
@@ -1462,6 +1475,78 @@ function drawUnicornHorn(ctx, colors, cx, groundY, scale, facing, anim) {
     s, s
   );
   ctx.restore();
+}
+
+// ── Walking horses on active plot ─────────────────────────────────────────────
+// Module-level state for each assigned horse's walking position
+const _walkingHorses = {};  // { horseId: { x, speed, facing } }
+
+function drawWalkingHorses(ctx, horseIds, horsesState, W, H, uiBarH, layout, elapsed, now) {
+  // The meadow strip is between the bottom of the garden grid and the HUD
+  const gardenBottom = layout.originY + layout.rows * (layout.plotH + layout.gap);
+  const hudTop = H - uiBarH;
+  const stripH = hudTop - gardenBottom;
+  if (stripH < 20) return; // Not enough space
+
+  const groundY = gardenBottom + Math.floor(stripH * 0.65);
+  const scale = Math.max(1.2, Math.min(1.8, W / 200));
+
+  for (let i = 0; i < horseIds.length; i++) {
+    const horseId = horseIds[i];
+    const horse = HORSES[horseId];
+    if (!horse) continue;
+
+    // Initialize walking state
+    if (!_walkingHorses[horseId]) {
+      // Stagger initial positions
+      _walkingHorses[horseId] = {
+        x: W * (0.2 + i * 0.18),
+        speed: 18 + i * 7,  // pixels per second, slightly different per horse
+        facing: i % 2 === 0 ? 'right' : 'left',
+      };
+    }
+
+    const ws = _walkingHorses[horseId];
+    const dt = 1 / 60; // approximate frame delta
+    const margin = scale * 20;
+
+    // Move
+    if (ws.facing === 'right') {
+      ws.x += ws.speed * dt;
+      if (ws.x > W - margin) {
+        ws.x = W - margin;
+        ws.facing = 'left';
+      }
+    } else {
+      ws.x -= ws.speed * dt;
+      if (ws.x < margin) {
+        ws.x = margin;
+        ws.facing = 'right';
+      }
+    }
+
+    // Walking animation uses elapsed time offset by horse index for variety
+    const anim = elapsed + i * 1.3;
+
+    ctx.save();
+    ctx.globalAlpha = 0.92;
+    drawHorse(ctx, horse.id, horse.colors, ws.x, groundY, scale, ws.facing, anim);
+    if (horse.id === 'starlightUnicorn') {
+      drawUnicornHorn(ctx, horse.colors, ws.x, groundY, scale, ws.facing, anim);
+    }
+    ctx.restore();
+
+    // Draw tiny name label above each horse
+    ctx.save();
+    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = 'rgba(30,15,10,0.55)';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    const labelY = groundY - scale * 40;
+    ctx.fillText(horse.name, ws.x, labelY);
+    ctx.restore();
+  }
 }
 
 function drawWildHorse(ctx, wild, W, gardenTop, elapsed, now) {

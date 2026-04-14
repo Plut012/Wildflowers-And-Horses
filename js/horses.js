@@ -16,6 +16,7 @@ export function defaultHorsesState() {
     trust: {},             // { horseId: trustCount } accumulated across visits
     perkLevels: {},        // { horseId: level } — level 1 on tame, increments each feed
     nextVisitAt: 0,        // game-time elapsed seconds when next visit is allowed
+    assignedTo: {},        // { horseId: plotIndex | null } — which plot the horse is on
   };
 }
 
@@ -28,6 +29,7 @@ export function hydrateHorses(saved) {
   base.trust        = saved.trust       ?? {};
   base.perkLevels  = saved.perkLevels  ?? {};
   base.nextVisitAt = saved.nextVisitAt ?? 0;
+  base.assignedTo  = saved.assignedTo  ?? {};
   return base;
 }
 
@@ -186,4 +188,30 @@ export function getPerkLevel(horsesState, horseId) {
 // Returns true if the given horse is tamed
 export function isTamed(horsesState, horseId) {
   return horsesState.tamed.some(t => t.horseId === horseId);
+}
+
+// Assign a tamed horse to a plot (or unassign with plotIndex = null)
+export function assignHorse(horsesState, horseId, plotIndex) {
+  // Remove from any previous plot assignment
+  horsesState.assignedTo[horseId] = plotIndex;
+}
+
+// Get array of horse IDs assigned to a given plot
+export function getAssignedHorses(horsesState, plotIndex) {
+  const result = [];
+  for (const [horseId, assignedPlot] of Object.entries(horsesState.assignedTo)) {
+    if (assignedPlot === plotIndex) result.push(horseId);
+  }
+  return result;
+}
+
+// Get the plot index a horse is assigned to (or null)
+export function getHorseAssignedPlot(horsesState, horseId) {
+  return horsesState.assignedTo[horseId] ?? null;
+}
+
+// Check how many horse slots a plot has based on garden count
+export function plotHorseCapacity(gardenCount) {
+  // imported from data.js but circular — use inline math (5 gardens per slot)
+  return Math.floor(gardenCount / 5);
 }

@@ -287,8 +287,54 @@ Farm (zoomed-out view — see all plots)
 
 **Done when:** You can zoom out, see your whole farm, tap plots to zoom in, and expand with new gardens and new land.
 
+### Phase 6 — Stable Redesign + Horse Assignment ✓ COMPLETE
+
+**Stable (canvas-rendered, full-screen):**
+- The old HTML stable overlay is replaced with a canvas-drawn full-screen stable view
+- Warm wooden stable interior with hay piles, lantern glow, wooden plank texture
+- Horizontal scroll through 8 horse stalls (swipe left/right or arrow buttons)
+- Each stall shows the horse animated (via drawHorse), name, perk name/level, description, assignment status
+- Empty (undiscovered) stalls show a "???" silhouette with no details
+- Close button and stall indicator dots for navigation
+
+**Horse Assignment:**
+- From the stable, tap "Assign" on a tamed horse → choose a plot
+- Capacity: 1 horse per 5 gardens (5 gardens = 1 slot, 25 = 5 slots)
+- One horse per plot assignment at a time; "Unassign" removes
+- `state.horses.assignedTo = { horseId: plotIndex | null }`
+
+**Per-plot perks:**
+- Perk effects (harvest bonuses, grow speed, sell bonus, etc.) now apply only from horses assigned to the active plot
+- `tickGarden`, `harvestPlotWithPerks`, `drawPlots`, and `sellFlowers` all accept assigned horse IDs
+
+**Horses walking on plots:**
+- Assigned horses walk slowly left-to-right in the meadow strip below the garden grid
+- Simple horizontal movement with leg animation (reuses drawHorse)
+- Each horse walks independently with a different speed
+- A tiny name label floats above each horse
+
+**State additions:**
+- `state.horses.assignedTo` — horse-to-plot mapping, persisted in save
+- Migration: old saves without assignedTo get an empty object
+
+**Files changed:**
+- `js/data.js` — added GARDENS_PER_HORSE_SLOT constant
+- `js/horses.js` — assignedTo in state, assignHorse/getAssignedHorses/getHorseAssignedPlot/plotHorseCapacity exports
+- `js/garden.js` — tickGarden + harvestPlotWithPerks accept assignedHorseIds for per-plot perks
+- `js/market.js` — sellFlowers uses active plot's assigned horses for perks
+- `js/render.js` — drawHorse exported; drawPlots accepts assignedIds; drawWalkingHorses added
+- `js/stable.js` — new: canvas stable overlay, stall scroll, horse assignment UI
+- `js/journal.js` — old stable code removed (now in stable.js)
+- `js/save.js` — assignedTo persisted
+- `js/main.js` — wired new stable, per-plot tick/harvest calls
+- `index.html` — stable HTML overlay removed
+- `css/style.css` — stable HTML overlay styles removed
+- `sw.js` — bumped to v6, added stable.js
+
+**Done when:** You can open the canvas stable, browse your horses in cozy stalls, assign them to your plots, and watch them walk around while you garden.
+
 ## Save System
 
 Single JSON blob in localStorage under `pony-pastures-save`. Saved on every meaningful action (debounced to ~1s). Loaded on boot. No cloud sync — it lives on her phone.
 
-Save includes: farm state (all plots + gardens), inventory, horse trust levels, horse perk levels, journal entries, total playtime.
+Save includes: farm state (all plots + gardens), inventory, horse trust levels, horse perk levels, horse assignments (assignedTo), journal entries, total playtime.

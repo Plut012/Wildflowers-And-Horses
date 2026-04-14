@@ -1,6 +1,6 @@
 // journal.js — Horse Whisper Journal: log what you've tried per horse.
 
-import { HORSES, HORSE_LIST, FLOWERS, PERKS } from './data.js';
+import { HORSES, HORSE_LIST, FLOWERS } from './data.js';
 
 let _state = null;
 
@@ -107,66 +107,4 @@ function renderJournalUI() {
   }
 }
 
-// Stable overlay init
-export function initStable(state) {
-  document.getElementById('stable-btn').addEventListener('click', openStable);
-  document.getElementById('stable-close').addEventListener('click', closeStable);
-  document.getElementById('stable-overlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('stable-overlay')) closeStable();
-  });
-}
-
-export function openStable() {
-  renderStableUI();
-  document.getElementById('stable-overlay').classList.remove('hidden');
-}
-
-export function closeStable() {
-  document.getElementById('stable-overlay').classList.add('hidden');
-}
-
-export function isStableOpen() {
-  return !document.getElementById('stable-overlay').classList.contains('hidden');
-}
-
-function renderStableUI() {
-  const el = document.getElementById('stable-horses');
-  if (!el) return;
-
-  const tamed = _state.horses.tamed;
-
-  if (tamed.length === 0) {
-    el.innerHTML = '<p class="stable-empty">No horses yet. Earn a wild horse\'s trust to welcome them to your stable.</p>';
-    return;
-  }
-
-  el.innerHTML = '';
-  for (const entry of tamed) {
-    const horse = HORSES[entry.horseId];
-    if (!horse) continue;
-    const trust = _state.horses.trust[horse.id] || 0;
-    const perkDef = PERKS[horse.id];
-    const perkLevel = _state.horses.perkLevels[horse.id] || 1;
-    const perkDesc = perkDef ? perkDef.description(perkLevel) : '';
-    const favFlower = FLOWERS[horse.favoriteFlower];
-
-    const card = document.createElement('div');
-    card.className = 'stable-card';
-    card.innerHTML =
-      `<div class="stable-horse-swatch" style="background:${horse.colors.body};border-color:${horse.colors.mane}"></div>` +
-      `<div class="stable-horse-info">` +
-        `<span class="stable-horse-name">${horse.name}</span>` +
-        `<span class="stable-horse-trust">Favorite: ${favFlower ? favFlower.name : '?'}</span>` +
-        `<span class="stable-horse-trust">Trust: ${trust}</span>` +
-        (perkDef
-          ? `<span class="stable-perk-row">` +
-              `<span class="stable-perk-name">${perkDef.name}</span>` +
-              `<span class="stable-perk-level">Lv.${perkLevel}</span>` +
-            `</span>` +
-            `<span class="stable-perk-desc">${perkDesc}</span>` +
-            `<span class="stable-perk-hint">Feed ${favFlower ? favFlower.name : '?'} to level up</span>`
-          : '') +
-      `</div>`;
-    el.appendChild(card);
-  }
-}
+// (Stable is now canvas-rendered in stable.js — journal.js handles only the journal)

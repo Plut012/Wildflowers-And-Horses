@@ -7,8 +7,9 @@ import { hydrateFarmPlot, createFarmPlot, plantSeed, waterPlot,
 import { render, computeLayout, triggerPlotAnim } from './render.js';
 import { initMarket, isMarketOpen } from './market.js';
 import { saveGame, loadGame, needsMigration } from './save.js';
-import { defaultHorsesState, hydrateHorses, tickHorses, feedHorse } from './horses.js';
-import { defaultJournalState, hydrateJournal, initJournal, initStable, isJournalOpen, isStableOpen, addJournalEntry } from './journal.js';
+import { defaultHorsesState, hydrateHorses, tickHorses, feedHorse, getAssignedHorses } from './horses.js';
+import { defaultJournalState, hydrateJournal, initJournal, isJournalOpen, addJournalEntry } from './journal.js';
+import { initStable, isStableOpen, renderStable } from './stable.js';
 
 // ── State ──────────────────────────────────────────────────────────────────────
 
@@ -103,7 +104,7 @@ resizeCanvas();
 
 initMarket(state, () => updateFlowerSelector());
 initJournal(state);
-initStable(state);
+initStable(canvas, state, () => saveGame(state));
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -160,14 +161,23 @@ function tick(now) {
   state.totalPlaytime += dt;
 
   // Tick all plots' gardens (not just active — plants grow in background too)
-  for (const plot of state.farm.plots) {
-    tickGarden(plot.gardens, Date.now(), state.horses);
+  for (let pi = 0; pi < state.farm.plots.length; pi++) {
+    const plot = state.farm.plots[pi];
+    const assignedIds = getAssignedHorses(state.horses, pi);
+    tickGarden(plot.gardens, Date.now(), state.horses, assignedIds);
   }
 
   tickHorses(state.horses, state.time.elapsed, state.inventory);
-  render(ctx, state, layout, now);
-  drawFloatingTexts(dt);
-  drawHorseFloatingTexts(dt);
+
+  if (isStableOpen()) {
+    // Stable takes over the full canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    renderStable(ctx, state, now);
+  } else {
+    render(ctx, state, layout, now);
+    drawFloatingTexts(dt);
+    drawHorseFloatingTexts(dt);
+  }
 
   requestAnimationFrame(tick);
 }
@@ -251,7 +261,8 @@ function handleGardenTap(garden) {
     const harvestFlowerId = garden.flowerId;
     const harvestIndex = garden.index;
     triggerPlotAnim(harvestIndex, 'harvest', { flowerId: harvestFlowerId });
-    const result = harvestPlotWithPerks(garden, gardens, state.horses);
+    const assignedIds = getAssignedHorses(state.horses, state.farm.activePlot);
+    const result = harvestPlotWithPerks(garden, gardens, state.horses, assignedIds);
     if (result) {
       const { flowerId, count, bonusCoins, freeSeed, autoPlowedIndices } = result;
       state.inventory.flowers[flowerId] = (state.inventory.flowers[flowerId] || 0) + count;

@@ -146,6 +146,9 @@ export const GARDEN_BUY_COSTS = [50, 100, 200, 400]; // index = (currentCount/5 
 // Cost to buy new plots of land (escalating by plot index)
 export const PLOT_BUY_COSTS = [500, 1500, 4000, 10000, 25000, 60000, 150000];
 
+// Horse assignment capacity: 1 horse slot per this many gardens
+export const GARDENS_PER_HORSE_SLOT = 5;
+
 // Day/night cycle
 export const DAY_DURATION   = 180; // seconds for one full day→night→day cycle
 export const NIGHT_FRACTION = 0.4; // fraction of cycle spent in night

@@ -100,7 +100,8 @@ export function harvestPlot(garden) {
 }
 
 // Harvest with all perk effects. Returns result object or null.
-export function harvestPlotWithPerks(garden, gardens, horses) {
+// horses = global horses state, assignedHorseIds = array of horse IDs assigned to this plot
+export function harvestPlotWithPerks(garden, gardens, horses, assignedHorseIds) {
   const flowerId = harvestPlot(garden);
   if (!flowerId) return null;
 
@@ -109,25 +110,34 @@ export function harvestPlotWithPerks(garden, gardens, horses) {
   let freeSeed = null;
   let autoPlowedIndices = [];
 
+  // Use assigned horses if provided, else fall back to all tamed (legacy)
+  const activeIds = assignedHorseIds || null;
+
+  function hasHorse(id) {
+    if (activeIds) return activeIds.includes(id) && isTamed(horses, id);
+    return horses && isTamed(horses, id);
+  }
+  function getLevel(id) { return getPerkLevel(horses, id); }
+
   if (horses) {
-    if (isTamed(horses, 'goldenPalomino')) {
-      const lvl = getPerkLevel(horses, 'goldenPalomino');
+    if (hasHorse('goldenPalomino')) {
+      const lvl = getLevel('goldenPalomino');
       if (Math.random() < PERKS.goldenPalomino.doubleChance(lvl)) count = 2;
     }
 
-    if (isTamed(horses, 'frostPony')) {
-      const lvl = getPerkLevel(horses, 'frostPony');
+    if (hasHorse('frostPony')) {
+      const lvl = getLevel('frostPony');
       if (Math.random() < PERKS.frostPony.seedDropChance(lvl)) freeSeed = flowerId;
     }
 
-    if (isTamed(horses, 'shadowRunner')) {
-      const lvl = getPerkLevel(horses, 'shadowRunner');
+    if (hasHorse('shadowRunner')) {
+      const lvl = getLevel('shadowRunner');
       const max = PERKS.shadowRunner.bonusCoinMax(lvl);
       bonusCoins = Math.floor(Math.random() * max) + 1;
     }
 
-    if (isTamed(horses, 'chestnutMare')) {
-      const lvl = getPerkLevel(horses, 'chestnutMare');
+    if (hasHorse('chestnutMare')) {
+      const lvl = getLevel('chestnutMare');
       const autoPlow = PERKS.chestnutMare.plotsPerHarvest(lvl);
       const empty = gardens.filter(g => g.index !== garden.index && g.state === PLOT_STATE.EMPTY);
       const n = Math.min(autoPlow, empty.length);
@@ -141,10 +151,16 @@ export function harvestPlotWithPerks(garden, gardens, horses) {
   return { flowerId, count, bonusCoins, freeSeed, autoPlowedIndices };
 }
 
-// Tick all gardens forward. horses used for Paint Horse grow speed.
-export function tickGarden(gardens, now, horses) {
+// Tick all gardens forward. horses + assignedHorseIds for Paint Horse grow speed.
+export function tickGarden(gardens, now, horses, assignedHorseIds) {
   let speedMult = 1;
-  if (horses && isTamed(horses, 'paintHorse')) {
+
+  function hasHorse(id) {
+    if (assignedHorseIds) return assignedHorseIds.includes(id) && horses && isTamed(horses, id);
+    return horses && isTamed(horses, id);
+  }
+
+  if (hasHorse('paintHorse')) {
     const lvl = getPerkLevel(horses, 'paintHorse');
     speedMult = 1 - PERKS.paintHorse.growSpeedBonus(lvl);
     if (speedMult < 0.25) speedMult = 0.25;

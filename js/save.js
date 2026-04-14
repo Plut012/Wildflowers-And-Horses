@@ -24,6 +24,7 @@ export function saveGame(state) {
           trust:       state.horses.trust,
           perkLevels:  state.horses.perkLevels,
           nextVisitAt: state.horses.nextVisitAt,
+          assignedTo:  state.horses.assignedTo,
         },
         journal:       state.journal,
         time:          state.time,

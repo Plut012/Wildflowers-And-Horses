@@ -2,7 +2,7 @@
 
 import { FLOWERS, FLOWER_LIST, PALETTE, PERKS } from './data.js';
 import { saveGame } from './save.js';
-import { isTamed, getPerkLevel } from './horses.js';
+import { isTamed, getPerkLevel, getAssignedHorses } from './horses.js';
 import { nightFactor } from './render.js';
 
 let _state = null;
@@ -129,8 +129,16 @@ function sellFlowers(flowerId, price) {
   const horses = _state.horses;
   let perFlower = price;
 
+  // Get horses assigned to the active plot for per-plot perk application
+  const activePlotIdx = _state.farm ? _state.farm.activePlot : 0;
+  const assignedIds = getAssignedHorses(horses, activePlotIdx);
+
+  function hasHorse(id) {
+    return assignedIds.includes(id) && isTamed(horses, id);
+  }
+
   // Appaloosa — sell bonus
-  if (isTamed(horses, 'appaloosa')) {
+  if (hasHorse('appaloosa')) {
     const lvl = getPerkLevel(horses, 'appaloosa');
     perFlower = Math.floor(perFlower * (1 + PERKS.appaloosa.sellBonus(lvl)));
   }
@@ -138,7 +146,7 @@ function sellFlowers(flowerId, price) {
   // Black Stallion — night bonus (flat per flower)
   const nf = nightFactor(_state.time.elapsed);
   const isNight = nf > 0.5;
-  if (isNight && isTamed(horses, 'blackStallion')) {
+  if (isNight && hasHorse('blackStallion')) {
     const lvl = getPerkLevel(horses, 'blackStallion');
     perFlower += PERKS.blackStallion.nightBonus(lvl);
   }
@@ -146,7 +154,7 @@ function sellFlowers(flowerId, price) {
   let total = qty * perFlower;
 
   // Starlight Unicorn — global multiplier
-  if (isTamed(horses, 'starlightUnicorn')) {
+  if (hasHorse('starlightUnicorn')) {
     const lvl = getPerkLevel(horses, 'starlightUnicorn');
     total = Math.floor(total * PERKS.starlightUnicorn.globalMultiplier(lvl));
   }
