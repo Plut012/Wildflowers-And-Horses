@@ -3,13 +3,17 @@
 import { STARTING_COINS, STARTING_SEEDS, PLOT_STATE, FLOWERS, FLOWER_LIST, HORSES, PERKS,
          STARTING_GARDENS, MAX_GARDENS_PER_PLOT, GARDEN_BUY_COSTS, PLOT_BUY_COSTS } from './data.js';
 import { hydrateFarmPlot, createFarmPlot, plantSeed, waterPlot,
-         harvestPlotWithPerks, tickGarden, gardenAtPoint } from './garden.js';
-import { render, computeLayout, triggerPlotAnim } from './render.js';
+         harvestPlotWithPerks, tickGarden, gardenAtPoint,
+         autoWaterPlot, autoHarvestPlot } from './garden.js';
+import { render, computeLayout, triggerPlotAnim, nightFactor } from './render.js';
 import { initMarket, isMarketOpen } from './market.js';
 import { saveGame, loadGame, needsMigration } from './save.js';
-import { defaultHorsesState, hydrateHorses, tickHorses, feedHorse, getAssignedHorses } from './horses.js';
+import { defaultHorsesState, hydrateHorses, tickHorses, feedHorse, getAssignedHorses, isTamed, getPerkLevel } from './horses.js';
 import { defaultJournalState, hydrateJournal, initJournal, isJournalOpen, addJournalEntry } from './journal.js';
 import { initStable, isStableOpen, renderStable } from './stable.js';
+import { initAudio, toggleAudio, isAudioEnabled, playPlant, playWater, playHarvest,
+         playCoin, playNicker, playFeed, playLevelUp, playTame, playButton,
+         startAmbient, updateCrickets } from './audio.js';
 
 // ── State ──────────────────────────────────────────────────────────────────────
 
@@ -106,6 +110,28 @@ initMarket(state, () => updateFlowerSelector());
 initJournal(state);
 initStable(canvas, state, () => saveGame(state));
 
+// Audio toggle button
+const audioBtn = document.getElementById('audio-btn');
+if (audioBtn) {
+  audioBtn.textContent = isAudioEnabled() ? '🔊' : '🔇';
+  audioBtn.addEventListener('click', () => {
+    const on = toggleAudio();
+    audioBtn.textContent = on ? '🔊' : '🔇';
+    if (on) playButton(); // only play if just enabled
+  });
+}
+
+// Initialize audio context on first user interaction
+let _audioInited = false;
+function _ensureAudio() {
+  if (!_audioInited) {
+    _audioInited = true;
+    initAudio();
+  }
+}
+document.addEventListener('touchstart', _ensureAudio, { once: true });
+document.addEventListener('click', _ensureAudio, { once: true });
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
@@ -161,13 +187,95 @@ function tick(now) {
   state.totalPlaytime += dt;
 
   // Tick all plots' gardens (not just active — plants grow in background too)
+  const nowMs = Date.now();
   for (let pi = 0; pi < state.farm.plots.length; pi++) {
     const plot = state.farm.plots[pi];
     const assignedIds = getAssignedHorses(state.horses, pi);
-    tickGarden(plot.gardens, Date.now(), state.horses, assignedIds);
+    tickGarden(plot.gardens, nowMs, state.horses, assignedIds);
+
+    // Storm Stallion: auto-water planted gardens
+    if (assignedIds.includes('stormStallion') && isTamed(state.horses, 'stormStallion')) {
+      const lvl = getPerkLevel(state.horses, 'stormStallion');
+      const interval = PERKS.stormStallion.autoWaterInterval(lvl) * 1000;
+      const timers = state.horses._stormTimers;
+      if (!timers[pi] || nowMs - timers[pi] >= interval) {
+        const watered = autoWaterPlot(plot.gardens, nowMs);
+        if (watered.length > 0) {
+          timers[pi] = nowMs;
+          playWater();
+          if (pi === state.farm.activePlot) {
+            for (const idx of watered) showFloatingText(idx, 'Auto-watered!', '#90CAF9');
+          }
+        } else if (!timers[pi]) {
+          timers[pi] = nowMs; // initialize timer even if nothing to water
+        }
+      }
+    }
+
+    // Harvest Queen: auto-harvest ready gardens
+    if (assignedIds.includes('harvestQueen') && isTamed(state.horses, 'harvestQueen')) {
+      const lvl = getPerkLevel(state.horses, 'harvestQueen');
+      const interval = PERKS.harvestQueen.autoHarvestInterval(lvl) * 1000;
+      const timers = state.horses._harvestTimers;
+      if (!timers[pi] || nowMs - timers[pi] >= interval) {
+        const results = autoHarvestPlot(plot.gardens, state.horses, assignedIds);
+        if (results.length > 0) {
+          timers[pi] = nowMs;
+          for (const result of results) {
+            const { flowerId, count, bonusCoins, freeSeed, meadowReplant, gardenIndex } = result;
+            state.inventory.flowers[flowerId] = (state.inventory.flowers[flowerId] || 0) + count;
+            if (bonusCoins > 0) state.inventory.coins += bonusCoins;
+            if (freeSeed) state.inventory.seeds[freeSeed] = (state.inventory.seeds[freeSeed] || 0) + 1;
+            if (pi === state.farm.activePlot) {
+              triggerPlotAnim(gardenIndex, 'harvest', { flowerId });
+              showFloatingText(gardenIndex, `Auto: +${count} ${FLOWERS[flowerId].name}`, '#FFD54F');
+              if (meadowReplant) showFloatingText(gardenIndex, 'Regrowth!', '#A5D6A7');
+            }
+          }
+          playHarvest();
+          playCoin();
+          saveGame(state);
+          updateFlowerSelector();
+        } else if (!timers[pi]) {
+          timers[pi] = nowMs;
+        }
+      }
+    }
   }
 
+  // Golden Herd: passive coin generation per second
+  if (isTamed(state.horses, 'goldenHerd')) {
+    const lvl = getPerkLevel(state.horses, 'goldenHerd');
+    const rate = PERKS.goldenHerd.coinsPerSecPerHorse(lvl);
+    const tamedCount = state.horses.tamed.length;
+    const gain = rate * tamedCount * dt;
+    state.horses._goldenHerdAccum = (state.horses._goldenHerdAccum || 0) + gain;
+    const wholeCoins = Math.floor(state.horses._goldenHerdAccum);
+    if (wholeCoins >= 1) {
+      state.inventory.coins += wholeCoins;
+      state.horses._goldenHerdAccum -= wholeCoins;
+      // Show subtle floating text occasionally (every ~10 coins earned)
+      if (Math.random() < 0.05) {
+        floatingTexts.push({
+          text: `+${wholeCoins}`,
+          x: canvas.width * 0.5,
+          y: canvas.height * 0.4,
+          life: 0.7,
+          color: '#FFD54F',
+        });
+      }
+    }
+  }
+
+  // Night crickets — fade in/out with nightFactor
+  updateCrickets(nightFactor(state.time.elapsed));
+
+  const prevWild = state.horses.wild;
   tickHorses(state.horses, state.time.elapsed, state.inventory);
+  // Play nicker when a new horse arrives
+  if (!prevWild && state.horses.wild) {
+    playNicker();
+  }
 
   if (isStableOpen()) {
     // Stable takes over the full canvas
@@ -264,7 +372,7 @@ function handleGardenTap(garden) {
     const assignedIds = getAssignedHorses(state.horses, state.farm.activePlot);
     const result = harvestPlotWithPerks(garden, gardens, state.horses, assignedIds);
     if (result) {
-      const { flowerId, count, bonusCoins, freeSeed, autoPlowedIndices } = result;
+      const { flowerId, count, bonusCoins, freeSeed, autoPlowedIndices, meadowReplant } = result;
       state.inventory.flowers[flowerId] = (state.inventory.flowers[flowerId] || 0) + count;
       if (freeSeed) {
         state.inventory.seeds[freeSeed] = (state.inventory.seeds[freeSeed] || 0) + 1;
@@ -279,7 +387,12 @@ function handleGardenTap(garden) {
           showFloatingText(idx, 'Auto-plowed!');
         }
       }
+      if (meadowReplant) {
+        showFloatingText(garden.index, 'Regrowth!', '#A5D6A7');
+      }
       const harvestLabel = count > 1 ? `+${count} ${FLOWERS[flowerId].name}!` : `+1 ${FLOWERS[flowerId].name}`;
+      playHarvest();
+      playCoin();
       saveGame(state);
       updateFlowerSelector();
       showFloatingText(garden.index, harvestLabel);
@@ -295,6 +408,7 @@ function handleGardenTap(garden) {
 
   if (garden.state === PLOT_STATE.PLANTED) {
     if (waterPlot(garden, now)) {
+      playWater();
       saveGame(state);
       showFloatingText(garden.index, 'Watered!');
     }
@@ -314,6 +428,7 @@ function handleGardenTap(garden) {
 
   if (plantSeed(garden, state.selectedFlower, state, now)) {
     triggerPlotAnim(garden.index, 'plant');
+    playPlant();
     state._showTutorial = false;
     saveGame(state);
     updateFlowerSelector();
@@ -381,6 +496,7 @@ function updatePlotLabel() {
 }
 
 document.getElementById('zoom-btn').addEventListener('click', () => {
+  playButton();
   if (state.farm.viewMode === 'plot') {
     zoomOut();
   } else {
@@ -421,6 +537,7 @@ function updateBuyGardenBtn() {
 }
 
 document.getElementById('buy-garden-btn').addEventListener('click', () => {
+  playButton();
   const plot = activePlotData();
   if (!plot) return;
 
@@ -578,12 +695,16 @@ function doFeedHorse(flowerId) {
   saveGame(state);
 
   if (result.tamed) {
+    playTame();
     showHorseFloating(`${result.horseName} is tamed!`, true);
   } else if (result.leveledUp) {
+    playLevelUp();
     showHorseFloating(`${result.perkName} Lv.${result.newLevel}!`, true);
   } else if (result.success) {
+    playFeed();
     showHorseFloating(`${result.horseName} liked it!`, true);
   } else {
+    playFeed();
     showHorseFloating(`${result.horseName} wanders off...`, false);
   }
 }

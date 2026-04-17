@@ -2,7 +2,7 @@
 
 ## Project
 
-Pony Pastures — a cozy PWA pixel-art horse farm game. Vanilla JS + Canvas, no frameworks, no build step. Phases 1–6 complete.
+Pony Pastures — a cozy PWA pixel-art horse farm game. Vanilla JS + Canvas, no frameworks, no build step. Phases 1–7 complete.
 
 ## Dev Commands
 
@@ -23,7 +23,7 @@ Pony Pastures — a cozy PWA pixel-art horse farm game. Vanilla JS + Canvas, no 
 - Test in Samsung Internet on Android — that's the target browser.
 - Animation state for plots lives in `_plotAnims` (module-level in render.js). Call `triggerPlotAnim(index, type, extra)` from main.js.
 - Tutorial hint is controlled by `state._showTutorial` (not persisted, resets on load if no save exists).
-- Service worker cache version is `pony-pastures-v6` — bump on any file change.
+- Service worker cache version is `pony-pastures-v7` — bump on any file change.
 
 ## Architecture Notes (Phase 6)
 
@@ -70,3 +70,26 @@ state.horses.assignedTo    — { horseId: plotIndex | null } — where each tame
 - `js/stable.js` — Canvas-drawn stable overlay. `initStable(canvas, state, onSave)` wires it up. `renderStable(ctx, state, now)` called from main tick when `isStableOpen()`. `drawHorse` is exported from render.js and reused here.
 - Horse assignment: `assignHorse(horsesState, horseId, plotIndex)`, `getAssignedHorses(horsesState, plotIndex)`, `plotHorseCapacity(gardenCount)` in horses.js.
 - Per-plot perk resolution: pass `assignedHorseIds` array to `tickGarden`, `harvestPlotWithPerks`, `drawPlots`, and in market's `sellFlowers`.
+
+## Architecture Notes (Phase 7)
+
+**New horses/flowers:** 6 new horses (stormStallion, harvestQueen, meadowSpirit, goldenHerd, phantomMare, sunChariot) and 6 new flowers (thistle, peony, fern, goldenrod, nightshade, sunrose). All defined in `js/data.js`.
+
+**Phantom Mare:** `getEffectivePerkLevel(horses, horseId, assignedIds)` in horses.js returns doubled level if phantomMare is on same plot. Never doubles phantomMare itself.
+
+**Auto-water / auto-harvest timers:**
+- `state.horses._stormTimers = { plotIndex: lastRunTimestamp }` — Storm Stallion per-plot timer
+- `state.horses._harvestTimers = { plotIndex: lastRunTimestamp }` — Harvest Queen per-plot timer
+- Both run in the main `tick()` loop in main.js, checking `Date.now()` against interval from PERKS
+
+**Golden Herd passive coins:**
+- `state.horses._goldenHerdAccum` — fractional coin accumulator
+- Rate = `coinsPerSecPerHorse(lvl) * tamed.length * dt`
+- Whole coins transferred to inventory each tick; accumulator keeps remainder
+
+**Audio system (`js/audio.js`):**
+- All sounds procedural: Web Audio API oscillators + noise buffers
+- `initAudio()` — call on first user interaction to create AudioContext and start ambient
+- `toggleAudio()` — on/off toggle, saves to localStorage key `pony-pastures-audio`
+- `updateCrickets(nightFactor)` — call each tick to fade crickets in/out with night
+- Individual sound functions: `playPlant()`, `playWater()`, `playHarvest()`, `playCoin()`, `playNicker()`, `playFeed()`, `playLevelUp()`, `playTame()`, `playButton()`

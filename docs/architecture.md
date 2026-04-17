@@ -333,6 +333,45 @@ Farm (zoomed-out view — see all plots)
 
 **Done when:** You can open the canvas stable, browse your horses in cozy stalls, assign them to your plots, and watch them walk around while you garden.
 
+### Phase 7 — New OP Horses + ASMR Sound Effects ✓ COMPLETE
+
+**6 new legendary horses (14 total):**
+- **Storm Stallion** (Thistle) — Tempest Water: auto-waters all planted gardens on assigned plot periodically (30s → 10s min with levels)
+- **Harvest Queen** (Peony) — Royal Harvest: auto-harvests ready gardens on assigned plot periodically (45s → 15s min with levels)
+- **Meadow Spirit** (Fern) — Regrowth: on harvest, chance to auto-replant same flower with no seed cost (15% base, +5% per level, cap 90%)
+- **Golden Herd** (Goldenrod) — Herd Wealth: passive coins per second scaled by tamed horse count (0.5/sec/horse × level)
+- **Phantom Mare** (Nightshade) — Phantom Boost: doubles effective perk level of all other horses on the same plot
+- **Sun Chariot** (Sunrose) — Eternal Day: flowers on this plot sell for 50%+ more during daytime
+
+**6 new flowers:** Thistle, Peony, Fern, Goldenrod, Nightshade, Sunrose — distinct pixel-art bloom shapes, balanced grow times/prices slotting between existing flowers.
+
+**Trust thresholds:** 12, 14, 16, 18, 20, 25 (harder to tame than originals).
+
+**ASMR Sound Effects (Web Audio API, procedural):**
+- Plant, Water, Harvest, Coin clink, Horse nicker, Feed, Level up, Tame success, Button tap
+- Ambient meadow wind (continuous layered filtered noise)
+- Night crickets (rhythmic high-frequency blips, fade in/out with night phase)
+- All sounds are soft, warm, short — ASMR feel
+
+**Audio toggle button:** Speaker icon in top button row. Preference saved in localStorage. Default ON.
+
+**Phantom Mare implementation:** `getEffectivePerkLevel(horses, horseId, assignedIds)` in horses.js doubles base perk level if Phantom Mare is on the same plot. Self-doubling is prevented. Two Phantom Mares on the same plot don't stack (Phantom Mare's own level is never doubled).
+
+**Files changed:**
+- `js/data.js` — 6 new FLOWERS, 6 new HORSES, 6 new PERKS entries
+- `js/audio.js` — new: all procedural sounds, ambient, crickets, toggle
+- `js/render.js` — 6 new horse shapes in HORSE_SHAPES, 6 new flower draw functions
+- `js/horses.js` — `getEffectivePerkLevel`, new state fields (_goldenHerdAccum, _stormTimers, _harvestTimers)
+- `js/garden.js` — `autoWaterPlot`, `autoHarvestPlot` exports; Meadow Spirit regrowth in harvestPlotWithPerks; uses getEffectivePerkLevel
+- `js/market.js` — Sun Chariot daytime sell bonus; coin/button sounds
+- `js/main.js` — Storm/Harvest auto-timers in tick loop; Golden Herd passive coins; audio init/wiring; audio button
+- `js/save.js` — new horse state fields persisted
+- `js/stable.js` — stall count comment updated (14 horses via dynamic HORSE_LIST.length)
+- `index.html` — audio toggle button added
+- `sw.js` — bumped to v7, added audio.js
+
+**Done when:** The farm hums with auto-watering and auto-harvesting, coins trickle in passively from Golden Herd, and every tap has a satisfying gentle sound.
+
 ## Save System
 
 Single JSON blob in localStorage under `pony-pastures-save`. Saved on every meaningful action (debounced to ~1s). Loaded on boot. No cloud sync — it lives on her phone.

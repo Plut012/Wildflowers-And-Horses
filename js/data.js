@@ -122,6 +122,98 @@ export const FLOWERS = {
       center: '#7986CB',
     },
   },
+
+  // ── Phase 7 new flowers ───────────────────────────────────────────────────
+  thistle: {
+    id: 'thistle',
+    name: 'Thistle',
+    seedCost: 16,
+    sellPrice: 34,
+    growTime: 55,
+    waterTime: 24,
+    stages: 3,
+    colors: {
+      seed:   '#8B6914',
+      sprout: '#7CB87A',
+      bloom:  '#BA68C8',
+      center: '#6A1B9A',
+    },
+  },
+  peony: {
+    id: 'peony',
+    name: 'Peony',
+    seedCost: 22,
+    sellPrice: 48,
+    growTime: 80,
+    waterTime: 34,
+    stages: 3,
+    colors: {
+      seed:   '#8B6914',
+      sprout: '#81C784',
+      bloom:  '#F48FB1',
+      center: '#AD1457',
+    },
+  },
+  fern: {
+    id: 'fern',
+    name: 'Fern',
+    seedCost: 18,
+    sellPrice: 38,
+    growTime: 65,
+    waterTime: 28,
+    stages: 3,
+    colors: {
+      seed:   '#8B6914',
+      sprout: '#4CAF50',
+      bloom:  '#2E7D32',
+      center: '#1B5E20',
+    },
+  },
+  goldenrod: {
+    id: 'goldenrod',
+    name: 'Goldenrod',
+    seedCost: 32,
+    sellPrice: 68,
+    growTime: 110,
+    waterTime: 46,
+    stages: 3,
+    colors: {
+      seed:   '#8B6914',
+      sprout: '#A5D6A7',
+      bloom:  '#FFD600',
+      center: '#F57F17',
+    },
+  },
+  nightshade: {
+    id: 'nightshade',
+    name: 'Nightshade',
+    seedCost: 38,
+    sellPrice: 85,
+    growTime: 150,
+    waterTime: 64,
+    stages: 3,
+    colors: {
+      seed:   '#8B6914',
+      sprout: '#4A4070',
+      bloom:  '#7B1FA2',
+      center: '#1A0030',
+    },
+  },
+  sunrose: {
+    id: 'sunrose',
+    name: 'Sunrose',
+    seedCost: 45,
+    sellPrice: 100,
+    growTime: 190,
+    waterTime: 80,
+    stages: 3,
+    colors: {
+      seed:   '#8B6914',
+      sprout: '#FFF176',
+      bloom:  '#FF6F00',
+      center: '#FFD54F',
+    },
+  },
 };
 
 export const FLOWER_LIST = Object.values(FLOWERS);
@@ -251,6 +343,50 @@ export const HORSES = {
     trustThreshold: 14,
     colors: { body: '#EEE8FF', mane: '#C8A8F0', eye: '#6040A8', nose: '#DDD4F8' },
   },
+
+  // ── Phase 7 legendary horses ──────────────────────────────────────────────
+  stormStallion: {
+    id: 'stormStallion',
+    name: 'Storm Stallion',
+    favoriteFlower: 'thistle',
+    trustThreshold: 12,
+    colors: { body: '#3A4A6A', mane: '#1A2848', eye: '#A0C0FF', nose: '#2A3858' },
+  },
+  harvestQueen: {
+    id: 'harvestQueen',
+    name: 'Harvest Queen',
+    favoriteFlower: 'peony',
+    trustThreshold: 14,
+    colors: { body: '#8B5E2A', mane: '#C8940A', eye: '#5A3010', nose: '#7A4E1A' },
+  },
+  meadowSpirit: {
+    id: 'meadowSpirit',
+    name: 'Meadow Spirit',
+    favoriteFlower: 'fern',
+    trustThreshold: 16,
+    colors: { body: '#5A8A3A', mane: '#3A6A1A', eye: '#1A4A0A', nose: '#4A7828' },
+  },
+  goldenHerd: {
+    id: 'goldenHerd',
+    name: 'Golden Herd',
+    favoriteFlower: 'goldenrod',
+    trustThreshold: 18,
+    colors: { body: '#D4A832', mane: '#FFE066', eye: '#5A3800', nose: '#B89020' },
+  },
+  phantomMare: {
+    id: 'phantomMare',
+    name: 'Phantom Mare',
+    favoriteFlower: 'nightshade',
+    trustThreshold: 20,
+    colors: { body: '#1A0830', mane: '#3A1060', eye: '#C060FF', nose: '#120620' },
+  },
+  sunChariot: {
+    id: 'sunChariot',
+    name: 'Sun Chariot',
+    favoriteFlower: 'sunrose',
+    trustThreshold: 25,
+    colors: { body: '#E8A030', mane: '#FFF0A0', eye: '#3A1800', nose: '#C88020' },
+  },
 };
 
 // ── Horse perk definitions ────────────────────────────────────────────────────
@@ -307,9 +443,51 @@ export const PERKS = {
     // Global coin multiplier applied at market sell time
     globalMultiplier: (lvl) => 1 + lvl * 0.1,
   },
+
+  // ── Phase 7 legendary perks ───────────────────────────────────────────────
+  stormStallion: {
+    name: 'Tempest Water',
+    description: (lvl) => `Auto-waters plots every ${Math.max(10, 30 - (lvl - 1) * 3)}s`,
+    // Interval in seconds between auto-water events
+    autoWaterInterval: (lvl) => Math.max(10, 30 - (lvl - 1) * 3),
+  },
+  harvestQueen: {
+    name: 'Royal Harvest',
+    description: (lvl) => `Auto-harvests ready plots every ${Math.max(15, 45 - (lvl - 1) * 4)}s`,
+    // Interval in seconds between auto-harvest events
+    autoHarvestInterval: (lvl) => Math.max(15, 45 - (lvl - 1) * 4),
+  },
+  meadowSpirit: {
+    name: 'Regrowth',
+    description: (lvl) => `${Math.min(15 + (lvl - 1) * 5, 90)}% chance to auto-replant on harvest`,
+    // Probability of free auto-replant after harvest
+    regrowthChance: (lvl) => Math.min((15 + (lvl - 1) * 5) / 100, 0.90),
+  },
+  goldenHerd: {
+    name: 'Herd Wealth',
+    description: (lvl) => `+${(0.5 * lvl).toFixed(1)} coins/sec per tamed horse`,
+    // Coins per second per tamed horse
+    coinsPerSecPerHorse: (lvl) => 0.5 * lvl,
+  },
+  phantomMare: {
+    name: 'Phantom Boost',
+    description: (lvl) => `Doubles other horses\' perk levels on this plot`,
+    // This perk doubles effective level of other horses on same plot (lvl scales nothing extra)
+    boostMultiplier: () => 2,
+  },
+  sunChariot: {
+    name: 'Eternal Day',
+    description: (lvl) => `Flowers sell for +${50 + (lvl - 1) * 10}% more during daytime`,
+    // Bonus sell multiplier during daytime (added to 1.0 base)
+    daySellBonus: (lvl) => (50 + (lvl - 1) * 10) / 100,
+  },
 };
 
 export const HORSE_LIST = Object.values(HORSES);
+
+// Golden Herd passive coin accumulation — fractional coins per tick
+// Actual coin rate = coinsPerSecPerHorse * tamedHorseCount
+// Stored in state.horses._goldenHerdAccum
 
 // Horse visit balance
 export const HORSE_VISIT_MIN_INTERVAL = 45;   // seconds between visits minimum

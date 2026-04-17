@@ -4,6 +4,7 @@ import { FLOWERS, FLOWER_LIST, PALETTE, PERKS } from './data.js';
 import { saveGame } from './save.js';
 import { isTamed, getPerkLevel, getAssignedHorses } from './horses.js';
 import { nightFactor } from './render.js';
+import { playButton, playCoin } from './audio.js';
 
 let _state = null;
 let _onUpdate = null;
@@ -117,6 +118,7 @@ function buySeed(flowerId, cost) {
   if (_state.inventory.coins < cost) return;
   _state.inventory.coins -= cost;
   _state.inventory.seeds[flowerId] = (_state.inventory.seeds[flowerId] || 0) + 1;
+  playButton();
   saveGame(_state);
   refreshMarketUI();
   _onUpdate();
@@ -151,6 +153,13 @@ function sellFlowers(flowerId, price) {
     perFlower += PERKS.blackStallion.nightBonus(lvl);
   }
 
+  // Sun Chariot — day sell bonus
+  const isDay = nf <= 0.5;
+  if (isDay && hasHorse('sunChariot')) {
+    const lvl = getPerkLevel(horses, 'sunChariot');
+    perFlower = Math.floor(perFlower * (1 + PERKS.sunChariot.daySellBonus(lvl)));
+  }
+
   let total = qty * perFlower;
 
   // Starlight Unicorn — global multiplier
@@ -161,6 +170,7 @@ function sellFlowers(flowerId, price) {
 
   _state.inventory.coins += total;
   delete _state.inventory.flowers[flowerId];
+  playCoin();
   saveGame(_state);
   refreshMarketUI();
   _onUpdate();

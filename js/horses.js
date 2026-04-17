@@ -17,6 +17,10 @@ export function defaultHorsesState() {
     perkLevels: {},        // { horseId: level } — level 1 on tame, increments each feed
     nextVisitAt: 0,        // game-time elapsed seconds when next visit is allowed
     assignedTo: {},        // { horseId: plotIndex | null } — which plot the horse is on
+    // Phase 7 additions
+    _goldenHerdAccum: 0,   // fractional coin accumulator for Golden Herd passive income
+    _stormTimers: {},      // { plotIndex: lastAutoWaterTime } for Storm Stallion
+    _harvestTimers: {},    // { plotIndex: lastAutoHarvestTime } for Harvest Queen
   };
 }
 
@@ -24,12 +28,15 @@ export function defaultHorsesState() {
 export function hydrateHorses(saved) {
   const base = defaultHorsesState();
   if (!saved) return base;
-  base.wild        = saved.wild        ?? null;
-  base.tamed       = saved.tamed       ?? [];
-  base.trust        = saved.trust       ?? {};
-  base.perkLevels  = saved.perkLevels  ?? {};
-  base.nextVisitAt = saved.nextVisitAt ?? 0;
-  base.assignedTo  = saved.assignedTo  ?? {};
+  base.wild           = saved.wild           ?? null;
+  base.tamed          = saved.tamed          ?? [];
+  base.trust          = saved.trust          ?? {};
+  base.perkLevels     = saved.perkLevels     ?? {};
+  base.nextVisitAt    = saved.nextVisitAt    ?? 0;
+  base.assignedTo     = saved.assignedTo     ?? {};
+  base._goldenHerdAccum = saved._goldenHerdAccum ?? 0;
+  base._stormTimers   = saved._stormTimers   ?? {};
+  base._harvestTimers = saved._harvestTimers ?? {};
   return base;
 }
 
@@ -188,6 +195,20 @@ export function getPerkLevel(horsesState, horseId) {
 // Returns true if the given horse is tamed
 export function isTamed(horsesState, horseId) {
   return horsesState.tamed.some(t => t.horseId === horseId);
+}
+
+// Returns effective perk level for a horse on a given plot,
+// applying Phantom Mare's doubling if she is also assigned there.
+// Avoids infinite loop: Phantom Mare's own level is never doubled by herself.
+export function getEffectivePerkLevel(horsesState, horseId, assignedHorseIds) {
+  const base = getPerkLevel(horsesState, horseId);
+  if (base === 0) return 0;
+  if (horseId === 'phantomMare') return base; // Phantom Mare doesn't double herself
+
+  const ids = assignedHorseIds || [];
+  const hasPhantom = ids.includes('phantomMare') && isTamed(horsesState, 'phantomMare');
+  if (hasPhantom) return base * 2;
+  return base;
 }
 
 // Assign a tamed horse to a plot (or unassign with plotIndex = null)

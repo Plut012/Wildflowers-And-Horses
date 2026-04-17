@@ -52,7 +52,7 @@ The Journal is a subtle log — it quietly tracks what you've tried, what worked
 
 One eternal warm world. Golden meadows by day. Cozy dark blue washed in campfire glow by night. The palette shifts gently between the two. Flowers bob. Horses breathe. Everything feels alive but unhurried.
 
-8 flowers. 8 horses. 12 garden plots. The system is deliberately small so every element matters.
+14 flowers. 14 horses. Multi-plot farm with expandable gardens. The system is deliberately bounded so every element matters.
 
 ## Horse Perks (Passive Stacking)
 
@@ -66,6 +66,14 @@ Each tamed horse adds a passive bonus that levels up the more you feed it:
 - **Frost Pony** — Rare seed drops
 - **Shadow Runner** — Reveals hidden bonuses
 - **Starlight Unicorn** — Multiplies everything
+
+**Legendary horses (harder to tame, more powerful):**
+- **Storm Stallion** — Auto-waters your gardens
+- **Harvest Queen** — Auto-harvests ready flowers
+- **Meadow Spirit** — Regrows harvested flowers for free
+- **Golden Herd** — Generates passive coins per second
+- **Phantom Mare** — Doubles other horses' perk levels
+- **Sun Chariot** — Big sell bonus during daytime
 
 Each horse you tame makes the next easier to chase. The farm snowballs, but gently.
 

@@ -1,7 +1,7 @@
 // sw.js — Service worker: cache-first offline support.
 // Bump CACHE_NAME version when deploying updates.
 
-const CACHE_NAME = 'pony-pastures-v6';
+const CACHE_NAME = 'pony-pastures-v7';
 
 const ASSETS = [
   '/',
@@ -17,6 +17,7 @@ const ASSETS = [
   '/js/save.js',
   '/js/data.js',
   '/js/stable.js',
+  '/js/audio.js',
 ];
 
 self.addEventListener('install', (event) => {

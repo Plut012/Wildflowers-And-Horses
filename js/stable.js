@@ -96,7 +96,7 @@ function _drawStallsView(ctx, W, H, now) {
   _addButton(W - 80, 10, 70, 38, 'Close', closeStable, '#5D4037', '#FFD54F');
 
   // Navigation arrows
-  const stallCount = HORSE_LIST.length; // 8
+  const stallCount = HORSE_LIST.length; // 14 in Phase 7
   const arrowY = H / 2;
   if (_stallOffsetTarget > 0) {
     _addButton(8, arrowY - 20, 36, 40, '<', () => { _stallOffsetTarget = Math.max(0, _stallOffsetTarget - 1); }, '#6D4C41', '#FFF8E1');

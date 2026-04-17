@@ -3,7 +3,7 @@
 // Each garden is the old "plot" object (plant state, flower, growth, etc.).
 
 import { FLOWERS, PLOT_STATE, GRID_COLS, PERKS, STARTING_GARDENS } from './data.js';
-import { isTamed, getPerkLevel } from './horses.js';
+import { isTamed, getPerkLevel, getEffectivePerkLevel } from './horses.js';
 
 // ── Garden (individual flower slot) ──────────────────────────────────────────
 
@@ -109,6 +109,7 @@ export function harvestPlotWithPerks(garden, gardens, horses, assignedHorseIds) 
   let bonusCoins = 0;
   let freeSeed = null;
   let autoPlowedIndices = [];
+  let meadowReplant = false;
 
   // Use assigned horses if provided, else fall back to all tamed (legacy)
   const activeIds = assignedHorseIds || null;
@@ -117,7 +118,7 @@ export function harvestPlotWithPerks(garden, gardens, horses, assignedHorseIds) 
     if (activeIds) return activeIds.includes(id) && isTamed(horses, id);
     return horses && isTamed(horses, id);
   }
-  function getLevel(id) { return getPerkLevel(horses, id); }
+  function getLevel(id) { return getEffectivePerkLevel(horses, id, activeIds); }
 
   if (horses) {
     if (hasHorse('goldenPalomino')) {
@@ -146,12 +147,31 @@ export function harvestPlotWithPerks(garden, gardens, horses, assignedHorseIds) 
         autoPlowedIndices.push(empty[i].index);
       }
     }
+
+    // Meadow Spirit — chance to auto-replant same flower (no seed cost)
+    if (hasHorse('meadowSpirit')) {
+      const lvl = getLevel('meadowSpirit');
+      if (Math.random() < PERKS.meadowSpirit.regrowthChance(lvl)) {
+        meadowReplant = true;
+        // Replant the same flower immediately (planted state, needs water)
+        const flower = FLOWERS[flowerId];
+        if (flower) {
+          garden.state    = PLOT_STATE.PLANTED;
+          garden.flowerId = flowerId;
+          garden.stage    = 0;
+          garden.plantedAt = Date.now();
+          garden.growTime  = flower.growTime * 1000;
+          garden.waterTime = flower.waterTime * 1000;
+        }
+      }
+    }
   }
 
-  return { flowerId, count, bonusCoins, freeSeed, autoPlowedIndices };
+  return { flowerId, count, bonusCoins, freeSeed, autoPlowedIndices, meadowReplant };
 }
 
 // Tick all gardens forward. horses + assignedHorseIds for Paint Horse grow speed.
+// Returns { autoWatered: [], autoHarvested: [{flowerId,count,...}] } or null.
 export function tickGarden(gardens, now, horses, assignedHorseIds) {
   let speedMult = 1;
 
@@ -159,9 +179,10 @@ export function tickGarden(gardens, now, horses, assignedHorseIds) {
     if (assignedHorseIds) return assignedHorseIds.includes(id) && horses && isTamed(horses, id);
     return horses && isTamed(horses, id);
   }
+  function getLevel(id) { return getEffectivePerkLevel(horses, id, assignedHorseIds); }
 
   if (hasHorse('paintHorse')) {
-    const lvl = getPerkLevel(horses, 'paintHorse');
+    const lvl = getLevel('paintHorse');
     speedMult = 1 - PERKS.paintHorse.growSpeedBonus(lvl);
     if (speedMult < 0.25) speedMult = 0.25;
   }
@@ -181,6 +202,35 @@ export function tickGarden(gardens, now, horses, assignedHorseIds) {
       }
     }
   }
+}
+
+// Storm Stallion: auto-water all planted-but-unwatered gardens on this plot.
+// Returns array of garden indices that were watered.
+export function autoWaterPlot(gardens, now) {
+  const watered = [];
+  for (const garden of gardens) {
+    if (garden.state === PLOT_STATE.PLANTED) {
+      garden.state = PLOT_STATE.WATERED;
+      garden.plantedAt = now;
+      watered.push(garden.index);
+    }
+  }
+  return watered;
+}
+
+// Harvest Queen: auto-harvest all ready gardens.
+// Returns array of harvest result objects { flowerId, count, bonusCoins, freeSeed, autoPlowedIndices, gardenIndex }.
+export function autoHarvestPlot(gardens, horses, assignedHorseIds) {
+  const results = [];
+  // Collect ready gardens first (snapshot) so auto-plow doesn't interfere
+  const readyGardens = gardens.filter(g => g.state === PLOT_STATE.READY);
+  for (const garden of readyGardens) {
+    const result = harvestPlotWithPerks(garden, gardens, horses, assignedHorseIds);
+    if (result) {
+      results.push({ ...result, gardenIndex: garden.index });
+    }
+  }
+  return results;
 }
 
 // ── Hit testing ───────────────────────────────────────────────────────────────

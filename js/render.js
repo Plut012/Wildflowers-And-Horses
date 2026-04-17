@@ -862,6 +862,13 @@ function drawBloom(ctx, flower, cx, baseY, w, h, now, plotIndex) {
     case 'bluebell':    drawBluebellFlower(ctx, flower, bx, bTop, r); break;
     case 'marigold':    drawMarigold(ctx, flower, bx, bTop, r); break;
     case 'moonpetal':   drawMoonpetal(ctx, flower, bx, bTop, r, now, plotIndex); break;
+    // Phase 7 flowers
+    case 'thistle':     drawThistleFlower(ctx, flower, bx, bTop, r, now, plotIndex); break;
+    case 'peony':       drawPeony(ctx, flower, bx, bTop, r); break;
+    case 'fern':        drawFernFlower(ctx, flower, bx, bTop, r, stemH, baseY); break;
+    case 'goldenrod':   drawGoldenrod(ctx, flower, bx, bTop, r, now, plotIndex); break;
+    case 'nightshade':  drawNightshade(ctx, flower, bx, bTop, r, now, plotIndex); break;
+    case 'sunrose':     drawSunrose(ctx, flower, bx, bTop, r, now, plotIndex); break;
     default:            drawGenericFlower(ctx, flower, bx, bTop, r); break;
   }
 }
@@ -1108,6 +1115,187 @@ function drawGenericFlower(ctx, flower, cx, bTop, r) {
   ctx.fillRect(cx - 2,     cy + r * 2 - 2, r > 6 ? 5 : 4, r);
   ctx.fillStyle = flower.colors.center;
   ctx.fillRect(cx - 3, cy - 3, 6, 6);
+}
+
+// Thistle: spiky purple head with jagged points
+function drawThistleFlower(ctx, flower, cx, bTop, r, now, plotIndex) {
+  const cy = bTop + r;
+  const t = now / 1200;
+  // Spiky outer ring
+  ctx.fillStyle = flower.colors.bloom;
+  for (let i = 0; i < 10; i++) {
+    const angle = (i / 10) * Math.PI * 2;
+    const spikeR = r + 3 + Math.sin(t + i) * 0.5;
+    const px = Math.round(cx + Math.cos(angle) * spikeR);
+    const py = Math.round(cy + Math.sin(angle) * spikeR);
+    ctx.fillRect(px - 1, py - 1, 2, 2);
+    // Short inner spoke
+    const px2 = Math.round(cx + Math.cos(angle) * (r - 1));
+    const py2 = Math.round(cy + Math.sin(angle) * (r - 1));
+    ctx.fillRect(px2 - 1, py2 - 1, 2, 2);
+  }
+  // Dense center
+  ctx.fillStyle = flower.colors.center;
+  ctx.fillRect(cx - 3, cy - 3, 7, 7);
+  ctx.fillStyle = '#D1A8E0';
+  ctx.fillRect(cx - 1, cy - 1, 3, 3);
+}
+
+// Peony: full double-layered round bloom
+function drawPeony(ctx, flower, cx, bTop, r) {
+  const cy = bTop + r;
+  // Outer ring — 8 large petals
+  ctx.fillStyle = flower.colors.bloom;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const px = Math.round(cx + Math.cos(angle) * (r + 1));
+    const py = Math.round(cy + Math.sin(angle) * (r + 1));
+    ctx.fillRect(px - 4, py - 4, 8, 8);
+  }
+  // Middle ring — 8 petals offset
+  ctx.fillStyle = '#F06292';
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8 + 0.5 / 8) * Math.PI * 2;
+    const pr = Math.round(r * 0.65);
+    const px = Math.round(cx + Math.cos(angle) * pr);
+    const py = Math.round(cy + Math.sin(angle) * pr);
+    ctx.fillRect(px - 3, py - 3, 6, 6);
+  }
+  // Dense inner layer
+  ctx.fillStyle = '#EC407A';
+  ctx.fillRect(cx - 3, cy - 3, 7, 7);
+  // Center highlight
+  ctx.fillStyle = flower.colors.center;
+  ctx.fillRect(cx - 2, cy - 2, 4, 4);
+  ctx.fillStyle = '#FFB3C6';
+  ctx.fillRect(cx - 1, cy - 1, 2, 2);
+}
+
+// Fern: leafy fronds, no traditional bloom — deep green layers
+function drawFernFlower(ctx, flower, cx, bTop, r, stemH, baseY) {
+  // Draw cascading leaf pairs up the stem
+  const spikeTop = bTop + r;
+  ctx.fillStyle = flower.colors.sprout;
+  ctx.fillRect(cx - 1, spikeTop, 2, r * 2.5);
+  const pairs = 4;
+  for (let i = 0; i < pairs; i++) {
+    const leafY = spikeTop + i * (r * 2.5 / pairs);
+    const leafSpan = r - i;
+    // Left frond
+    ctx.fillStyle = i % 2 === 0 ? flower.colors.bloom : '#388E3C';
+    ctx.fillRect(cx - leafSpan - 2, leafY, leafSpan + 1, 2);
+    ctx.fillRect(cx - leafSpan - 3, leafY + 2, leafSpan, 2);
+    // Right frond
+    ctx.fillRect(cx + 2, leafY, leafSpan + 1, 2);
+    ctx.fillRect(cx + 3, leafY + 2, leafSpan, 2);
+  }
+  // Tip curl
+  ctx.fillStyle = flower.colors.center;
+  ctx.fillRect(cx - 2, spikeTop - 2, 4, 3);
+}
+
+// Goldenrod: tall dense spike of tiny golden florets
+function drawGoldenrod(ctx, flower, cx, bTop, r, now, plotIndex) {
+  const spikeTop = bTop + r * 0.5;
+  const t = now / 1000;
+  // Stem
+  ctx.fillStyle = flower.colors.sprout;
+  ctx.fillRect(cx - 1, spikeTop, 2, r * 3);
+  // Dense floret clusters
+  const clustCount = 6;
+  for (let i = 0; i < clustCount; i++) {
+    const fy = spikeTop + i * (r * 3 / clustCount);
+    const wave = Math.sin(t * 1.5 + i + plotIndex) * 1;
+    // Small flower cluster both sides
+    ctx.fillStyle = flower.colors.bloom;
+    ctx.fillRect(cx - 5 + wave, fy, 4, 3);
+    ctx.fillRect(cx + 2 + wave, fy, 4, 3);
+    ctx.fillStyle = flower.colors.center;
+    ctx.fillRect(cx - 4 + wave, fy + 1, 2, 1);
+    ctx.fillRect(cx + 3 + wave, fy + 1, 2, 1);
+  }
+  // Top cluster
+  ctx.fillStyle = flower.colors.bloom;
+  for (let i = 0; i < 5; i++) {
+    ctx.fillRect(cx - 3 + i, spikeTop - 2 - i % 3, 3, 3);
+  }
+}
+
+// Nightshade: dark purple berries on drooping stems, eerie glow
+function drawNightshade(ctx, flower, cx, bTop, r, now, plotIndex) {
+  const cy = bTop + r;
+  const t = now / 1000;
+  // Dark drooping branches
+  ctx.fillStyle = flower.colors.sprout;
+  ctx.fillRect(cx - 1, cy - r, 2, r);
+  ctx.fillRect(cx - r, cy - r * 0.5, r, 2);
+  ctx.fillRect(cx + 1, cy - r * 0.5, r - 1, 2);
+  // Berry clusters — dark purple with glow
+  const berries = [
+    { ox: -r, oy: -r * 0.4 }, { ox: 0, oy: -r * 0.7 }, { ox: r - 2, oy: -r * 0.4 },
+    { ox: -r * 0.5, oy: 0 }, { ox: r * 0.5, oy: 0 },
+  ];
+  for (const { ox, oy } of berries) {
+    const shimmer = 0.7 + 0.3 * Math.sin(t * 2 + ox * 0.1 + plotIndex);
+    ctx.save();
+    ctx.globalAlpha = shimmer;
+    ctx.fillStyle = flower.colors.bloom;
+    ctx.fillRect(Math.round(cx + ox) - 3, Math.round(cy + oy) - 3, 6, 6);
+    ctx.fillStyle = '#4A0072';
+    ctx.fillRect(Math.round(cx + ox) - 1, Math.round(cy + oy) - 1, 2, 2);
+    ctx.restore();
+  }
+  // Purple glow
+  ctx.save();
+  const glow = 0.12 + 0.08 * Math.sin(t * 1.8 + plotIndex);
+  ctx.globalAlpha = glow;
+  const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, r + 4);
+  grad.addColorStop(0, 'rgba(180,50,255,0.8)');
+  grad.addColorStop(1, 'rgba(100,0,200,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(cx - r - 5, cy - r - 5, (r + 5) * 2, (r + 5) * 2);
+  ctx.restore();
+}
+
+// Sunrose: radiant multi-petal bloom with warm golden glow
+function drawSunrose(ctx, flower, cx, bTop, r, now, plotIndex) {
+  const cy = bTop + r;
+  const t = now / 900;
+  // Outer warm glow
+  const glow = 0.25 + 0.15 * Math.sin(t + plotIndex);
+  ctx.save();
+  ctx.globalAlpha = glow;
+  const grad = ctx.createRadialGradient(cx, cy, r - 2, cx, cy, r + 8);
+  grad.addColorStop(0, 'rgba(255,200,50,0.7)');
+  grad.addColorStop(1, 'rgba(255,120,0,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(cx - r - 10, cy - r - 10, (r + 10) * 2, (r + 10) * 2);
+  ctx.restore();
+  // 12 outer petals (flame orange)
+  ctx.fillStyle = flower.colors.bloom;
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const rot = Math.sin(t * 0.5 + plotIndex) * 0.05;
+    const px = Math.round(cx + Math.cos(angle + rot) * (r + 2));
+    const py = Math.round(cy + Math.sin(angle + rot) * (r + 2));
+    ctx.fillRect(px - 3, py - 3, 6, 6);
+  }
+  // Inner petals (golden)
+  ctx.fillStyle = '#FFCA28';
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8 + 0.5 / 8) * Math.PI * 2;
+    const pr = Math.round(r * 0.7);
+    const px = Math.round(cx + Math.cos(angle) * pr);
+    const py = Math.round(cy + Math.sin(angle) * pr);
+    ctx.fillRect(px - 2, py - 2, 5, 5);
+  }
+  // Bright center
+  ctx.fillStyle = flower.colors.center;
+  ctx.fillRect(cx - 4, cy - 4, 8, 8);
+  ctx.fillStyle = '#FFF9C4';
+  ctx.fillRect(cx - 2, cy - 2, 4, 4);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(cx - 1, cy - 1, 2, 2);
 }
 
 function drawHUD(ctx, W, H, barH, inventory, pal, nf) {
@@ -1442,6 +1630,135 @@ const HORSE_SHAPES = {
       ctx.fillRect(-s * 1, -s * 17 + bb, s * 2, s * 2);
       ctx.fillRect( s * 4, -s * 15 + bb, s * 2, s * 2);
       ctx.fillRect( s * 1, -s * 12 + bb, s * 2, s * 2);
+    },
+  },
+
+  // ── Phase 7 legendary horses — larger and more distinct ───────────────────
+
+  // Storm Stallion — tall muscular build, stormy blue-grey, electric markings
+  stormStallion: {
+    legW: 4, bodyLeft: 10, bodyTop: 21, bodyW: 22, bodyH: 11,
+    neckX: 7, neckTop: 27, neckW: 6, neckH: 10,
+    headX: 5, headTop: 33, headW: 11, headH: 8,
+    noseX: 11, noseTop: 30, noseW: 5, noseH: 5,
+    eyeX: 7, eyeTop: 31,
+    maneW: 4, tailW: 5, hoofColor: '#1A2848',
+    markings: (ctx, s, bb, c) => {
+      // Lightning bolt streak on flank
+      ctx.fillStyle = 'rgba(160,192,255,0.55)';
+      ctx.fillRect(-s * 2, -s * 21 + bb, s * 3, s * 9);
+      ctx.fillRect( s * 1, -s * 17 + bb, s * 3, s * 5);
+      // Electric crackle on legs
+      ctx.fillStyle = 'rgba(120,180,255,0.35)';
+      ctx.fillRect(-s * 7, -s * 6 + bb, s * 3, s * 4);
+      ctx.fillRect( s * 6, -s * 6 + bb, s * 3, s * 4);
+    },
+  },
+
+  // Harvest Queen — broad full figure, warm gold crown marking
+  harvestQueen: {
+    legW: 4, bodyLeft: 10, bodyTop: 20, bodyW: 23, bodyH: 12,
+    neckX: 7, neckTop: 26, neckW: 6, neckH: 10,
+    headX: 5, headTop: 32, headW: 11, headH: 8,
+    noseX: 11, noseTop: 29, noseW: 5, noseH: 5,
+    eyeX: 7, eyeTop: 30,
+    maneW: 5, tailW: 5, hoofColor: '#8B5E2A',
+    markings: (ctx, s, bb, c) => {
+      // Golden crown band on forehead
+      ctx.fillStyle = '#FFD600';
+      ctx.fillRect(s * 6, -s * 33 + bb, s * 7, s * 2);
+      ctx.fillRect(s * 7, -s * 35 + bb, s * 2, s * 3);
+      ctx.fillRect(s * 10, -s * 35 + bb, s * 2, s * 3);
+      // Rich amber belly glow
+      ctx.fillStyle = 'rgba(255,180,30,0.28)';
+      ctx.fillRect(-s * 5, -s * 12 + bb, s * 14, s * 5);
+    },
+  },
+
+  // Meadow Spirit — ethereal, translucent green glow, flowing lines
+  meadowSpirit: {
+    legW: 3, bodyLeft: 9, bodyTop: 19, bodyW: 21, bodyH: 10,
+    neckX: 7, neckTop: 25, neckW: 5, neckH: 9,
+    headX: 6, headTop: 31, headW: 10, headH: 7,
+    noseX: 12, noseTop: 28, noseW: 4, noseH: 4,
+    eyeX: 8, eyeTop: 29,
+    maneW: 5, tailW: 6, hoofColor: '#3A6A1A',
+    markings: (ctx, s, bb, c) => {
+      // Ethereal green shimmer over whole body
+      ctx.fillStyle = 'rgba(90,180,60,0.22)';
+      ctx.fillRect(-s * 9, -s * 21 + bb, s * 22, s * 14);
+      // Leaf-like dapple marks
+      ctx.fillStyle = 'rgba(50,150,30,0.35)';
+      ctx.fillRect(-s * 3, -s * 18 + bb, s * 5, s * 4);
+      ctx.fillRect( s * 3, -s * 14 + bb, s * 4, s * 3);
+      ctx.fillRect(-s * 5, -s * 13 + bb, s * 4, s * 3);
+    },
+  },
+
+  // Golden Herd — stocky, powerful, deep golden with herd-mark brands
+  goldenHerd: {
+    legW: 4, bodyLeft: 10, bodyTop: 20, bodyW: 23, bodyH: 12,
+    neckX: 7, neckTop: 26, neckW: 7, neckH: 10,
+    headX: 5, headTop: 32, headW: 11, headH: 8,
+    noseX: 11, noseTop: 29, noseW: 5, noseH: 5,
+    eyeX: 7, eyeTop: 30,
+    maneW: 5, tailW: 5, hoofColor: '#5A3800',
+    markings: (ctx, s, bb, c) => {
+      // Golden shimmer
+      ctx.fillStyle = 'rgba(255,220,50,0.25)';
+      ctx.fillRect(-s * 5, -s * 20 + bb, s * 16, s * 12);
+      // Herd brand — small sun symbol on flank
+      ctx.fillStyle = '#FFD600';
+      ctx.fillRect( s * 0, -s * 16 + bb, s * 5, s * 2);
+      ctx.fillRect( s * 2, -s * 18 + bb, s * 2, s * 5);
+      // Coin-gold hooves
+      ctx.fillStyle = '#D4A830';
+      ctx.fillRect(-s * 7, -s * 2 + bb, s * 3, s * 2);
+      ctx.fillRect( s * 6, -s * 2 + bb, s * 3, s * 2);
+    },
+  },
+
+  // Phantom Mare — dark violet, wraithlike, semi-transparent aura
+  phantomMare: {
+    legW: 3, bodyLeft: 9, bodyTop: 20, bodyW: 20, bodyH: 10,
+    neckX: 7, neckTop: 26, neckW: 5, neckH: 10,
+    headX: 6, headTop: 32, headW: 9, headH: 7,
+    noseX: 12, noseTop: 29, noseW: 4, noseH: 4,
+    eyeX: 8, eyeTop: 30,
+    maneW: 4, tailW: 6, hoofColor: '#0A0418',
+    markings: (ctx, s, bb, c) => {
+      // Ghostly violet aura
+      ctx.fillStyle = 'rgba(180,60,255,0.18)';
+      ctx.fillRect(-s * 10, -s * 22 + bb, s * 24, s * 16);
+      // Swirling phantom marks
+      ctx.fillStyle = 'rgba(140,40,220,0.40)';
+      ctx.fillRect(-s * 4, -s * 20 + bb, s * 3, s * 8);
+      ctx.fillRect( s * 3, -s * 17 + bb, s * 3, s * 6);
+      // Glowing eyes
+      ctx.fillStyle = '#C060FF';
+      ctx.fillRect(s * 8, -s * 29 + bb, s * 3, s * 2);
+    },
+  },
+
+  // Sun Chariot — majestic, fiery mane/tail, radiant body
+  sunChariot: {
+    legW: 4, bodyLeft: 10, bodyTop: 21, bodyW: 23, bodyH: 11,
+    neckX: 7, neckTop: 27, neckW: 7, neckH: 11,
+    headX: 5, headTop: 33, headW: 11, headH: 8,
+    noseX: 11, noseTop: 30, noseW: 5, noseH: 5,
+    eyeX: 7, eyeTop: 31,
+    maneW: 6, tailW: 7, hoofColor: '#B86000',
+    markings: (ctx, s, bb, c) => {
+      // Warm solar radiance on body
+      ctx.fillStyle = 'rgba(255,200,60,0.28)';
+      ctx.fillRect(-s * 5, -s * 21 + bb, s * 18, s * 13);
+      // Flame stripe running back
+      ctx.fillStyle = '#FF8F00';
+      ctx.fillRect(-s * 8, -s * 19 + bb, s * 5, s * 3);
+      ctx.fillRect(-s * 6, -s * 15 + bb, s * 4, s * 3);
+      // Bright blaze on face
+      ctx.fillStyle = '#FFF9C4';
+      ctx.fillRect(s * 8, -s * 32 + bb, s * 3, s * 7);
     },
   },
 };
