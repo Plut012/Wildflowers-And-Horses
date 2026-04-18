@@ -15,11 +15,14 @@
   <!-- Game canvas — all farm rendering happens here -->
   <canvas id="game-canvas"></canvas>
 
-  <!-- Flower side panel — collapsible seed selector -->
-  <div id="seed-panel" class="seed-panel-closed" aria-label="Seed selector">
-    <button id="seed-panel-tab" aria-label="Toggle seed panel">🌱</button>
-    <div id="seed-panel-content">
-      <div id="flower-selector"></div>
+  <!-- Right side panel — farm zoom + seed selector -->
+  <div id="side-panel">
+    <button id="zoom-btn" aria-label="Zoom to farm view">🏡 Farm</button>
+    <div id="seed-panel" class="seed-panel-closed" aria-label="Seed selector">
+      <button id="seed-panel-tab" aria-label="Toggle seed panel">🌱</button>
+      <div id="seed-panel-content">
+        <div id="flower-selector"></div>
+      </div>
     </div>
   </div>
 
@@ -31,7 +34,6 @@
 
   <!-- Top-right button row -->
   <div id="top-buttons">
-    <button id="zoom-btn"    aria-label="Zoom to farm view">Farm</button>
     <button id="stable-btn"  aria-label="Open stable">Stable</button>
     <button id="journal-btn" aria-label="Open journal">Journal</button>
     <button id="market-btn"  aria-label="Open market">Market</button>

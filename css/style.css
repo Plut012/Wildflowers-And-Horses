@@ -26,9 +26,9 @@ html, body {
   touch-action: none;
 }
 
-/* ── Seed side panel ─────────────────────────────────────────────────────── */
+/* ── Right side panel (farm + seeds) ─────────────────────────────────────── */
 
-#seed-panel {
+#side-panel {
   position: fixed;
   right: 0;
   top: 50%;
@@ -36,9 +36,35 @@ html, body {
   z-index: 10;
   pointer-events: auto;
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+#side-panel #zoom-btn {
+  background: rgba(62, 39, 35, 0.88);
+  border: 2px solid #8D6E63;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  color: #FFF8E1;
+  font: bold 12px monospace;
+  padding: 8px 10px;
+  min-height: 44px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: -2px 0 6px rgba(0,0,0,0.3);
+  white-space: nowrap;
+}
+
+#side-panel #zoom-btn:active {
+  background: #6D4C41;
+  border-color: #FFD54F;
+}
+
+#seed-panel {
+  display: flex;
   flex-direction: row;
   align-items: center;
-  transition: transform 0.25s ease;
 }
 
 #seed-panel.seed-panel-closed #seed-panel-content {

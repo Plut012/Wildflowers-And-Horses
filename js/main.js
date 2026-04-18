@@ -463,27 +463,27 @@ canvas.addEventListener('click', (e) => {
 
 function zoomOut() {
   state.farm.viewMode = 'farm';
-  // Hide seed panel in farm view
-  const seedPanel = document.getElementById('seed-panel');
-  if (seedPanel) seedPanel.style.display = 'none';
+  // Hide side panel in farm view
+  const sidePanel = document.getElementById('side-panel');
+  if (sidePanel) sidePanel.style.display = 'none';
   const buyBtn = document.getElementById('buy-garden-btn');
   if (buyBtn) buyBtn.style.display = 'none';
   // Swap zoom button icon
   const zoomBtn = document.getElementById('zoom-btn');
-  if (zoomBtn) zoomBtn.textContent = 'Plot';
+  if (zoomBtn) zoomBtn.textContent = '🌿 Plot';
   saveGame(state);
 }
 
 function zoomIn() {
   state.farm.viewMode = 'plot';
-  const seedPanel = document.getElementById('seed-panel');
-  if (seedPanel) seedPanel.style.display = '';
+  const sidePanel = document.getElementById('side-panel');
+  if (sidePanel) sidePanel.style.display = '';
   // Recompute layout for the new active plot's garden count
   const gc = activePlotData() ? activePlotData().gardenCount : STARTING_GARDENS;
   layout = computeLayout(canvas.width, canvas.height, gc);
   updateBuyGardenBtn();
   const zoomBtn = document.getElementById('zoom-btn');
-  if (zoomBtn) zoomBtn.textContent = 'Farm';
+  if (zoomBtn) zoomBtn.textContent = '🏡 Farm';
   updatePlotLabel();
   saveGame(state);
 }
