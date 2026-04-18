@@ -297,14 +297,15 @@ requestAnimationFrame(tick);
 function handleTap(clientX, clientY) {
   if (isMarketOpen() || isJournalOpen() || isStableOpen()) return;
 
-  if (state.horses.wild && !state.horses.wild.fed) {
-    openFeedPicker();
-    return;
-  }
-
   const rect = canvas.getBoundingClientRect();
   const x = (clientX - rect.left) * (canvas.width  / rect.width);
   const y = (clientY - rect.top)  * (canvas.height / rect.height);
+
+  // Only open feed picker if tapping above the garden area (horse/fence zone)
+  if (state.horses.wild && !state.horses.wild.fed && layout && y < layout.gardenTop) {
+    openFeedPicker();
+    return;
+  }
 
   if (state.farm.viewMode === 'farm') {
     handleFarmViewTap(x, y);
@@ -462,9 +463,9 @@ canvas.addEventListener('click', (e) => {
 
 function zoomOut() {
   state.farm.viewMode = 'farm';
-  // Hide flower selector in farm view
-  const sel = document.getElementById('flower-selector');
-  if (sel) sel.style.display = 'none';
+  // Hide seed panel in farm view
+  const seedPanel = document.getElementById('seed-panel');
+  if (seedPanel) seedPanel.style.display = 'none';
   const buyBtn = document.getElementById('buy-garden-btn');
   if (buyBtn) buyBtn.style.display = 'none';
   // Swap zoom button icon
@@ -475,8 +476,8 @@ function zoomOut() {
 
 function zoomIn() {
   state.farm.viewMode = 'plot';
-  const sel = document.getElementById('flower-selector');
-  if (sel) sel.style.display = '';
+  const seedPanel = document.getElementById('seed-panel');
+  if (seedPanel) seedPanel.style.display = '';
   // Recompute layout for the new active plot's garden count
   const gc = activePlotData() ? activePlotData().gardenCount : STARTING_GARDENS;
   layout = computeLayout(canvas.width, canvas.height, gc);
@@ -618,6 +619,13 @@ function updateFlowerSelector() {
 
 updateFlowerSelector();
 updatePlotLabel();
+
+// ── Seed panel toggle ─────────────────────────────────────────────────────────
+
+document.getElementById('seed-panel-tab').addEventListener('click', () => {
+  const panel = document.getElementById('seed-panel');
+  panel.classList.toggle('seed-panel-closed');
+});
 
 // ── Feed picker (HTML overlay) ─────────────────────────────────────────────────
 

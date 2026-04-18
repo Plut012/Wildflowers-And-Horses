@@ -15,8 +15,13 @@
   <!-- Game canvas — all farm rendering happens here -->
   <canvas id="game-canvas"></canvas>
 
-  <!-- Flower selector bar — above canvas HUD, below market button -->
-  <div id="flower-selector" aria-label="Seed selector"></div>
+  <!-- Flower side panel — collapsible seed selector -->
+  <div id="seed-panel" class="seed-panel-closed" aria-label="Seed selector">
+    <button id="seed-panel-tab" aria-label="Toggle seed panel">🌱</button>
+    <div id="seed-panel-content">
+      <div id="flower-selector"></div>
+    </div>
+  </div>
 
   <!-- Buy Garden button — shows when zoomed into a plot with room to expand -->
   <button id="buy-garden-btn" aria-label="Buy more garden space" style="display:none"></button>
