@@ -53,12 +53,14 @@ export function openStable() {
   _assignHorseId = null;
   _stallOffsetTarget = 0;
   _stallOffset = 0;
+  document.getElementById('top-buttons').style.display = 'none';
 }
 
 export function closeStable() {
   _open = false;
   _mode = 'stalls';
   _assignHorseId = null;
+  document.getElementById('top-buttons').style.display = '';
 }
 
 // Called from main render loop when stable is open
@@ -252,8 +254,8 @@ function _drawStall(ctx, horseIdx, x, y, w, h, now, interactive) {
 function _drawEmptyStall(ctx, horse, x, y, w, h, now) {
   // Mystery silhouette — dark grey horse shape
   const cx = x + w / 2;
-  const groundY = y + h - 28;
-  const scale = Math.min(2.2, w / 60);
+  const groundY = y + h * 0.55;
+  const scale = Math.min(5, w / 30);
 
   ctx.save();
   ctx.globalAlpha = 0.18;
@@ -281,8 +283,8 @@ function _drawEmptyStall(ctx, horse, x, y, w, h, now) {
 
 function _drawTamedStall(ctx, horse, horses, x, y, w, h, now, interactive) {
   const cx = x + w / 2;
-  const groundY = y + h - 28;
-  const scale = Math.min(2.2, w / 60);
+  const groundY = y + h * 0.55;
+  const scale = Math.min(5, w / 30);
   const anim = now / 1000;
 
   // Draw the horse using shared render function
@@ -320,7 +322,7 @@ function _drawTamedStall(ctx, horse, horses, x, y, w, h, now, interactive) {
 
   // Assignment info
   const assignedPlot = getHorseAssignedPlot(horses, horse.id);
-  const assignY = y + h - 68;
+  const assignY = y + h - 52;
 
   if (assignedPlot !== null) {
     ctx.fillStyle = '#A5D6A7';
