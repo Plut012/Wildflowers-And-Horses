@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pony Pastures — A Cozy Horse Farm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream:   #F5E6D0;
+    --brown:   #8B7355;
+    --dark:    #3E2723;
+    --gold:    #FFD54F;
+    --green:   #A5D6A7;
+    --muted:   #C4A882;
+    --sky:     #E8D4B0;
+    --night:   #1A2340;
+    --panel:   #3E2723;
+    --border:  #8D6E63;
+    --btn:     #6D4C41;
+    --btnText: #FFF8E1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background: var(--dark);
+  }
+
+  body {
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    background: var(--dark);
+    color: var(--cream);
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Typography ── */
+  h1 { font-size: 2.4rem; line-height: 1.1; color: var(--gold); letter-spacing: -1px; }
+  h2 { font-size: 1.3rem; color: var(--gold); margin-bottom: 0.5rem; }
+  h3 { font-size: 1rem; color: var(--muted); margin-bottom: 0.25rem; }
+  p  { font-size: 0.85rem; line-height: 1.6; color: var(--cream); opacity: 0.9; }
+
+  /* ── Section spacing ── */
+  section {
+    padding: 32px 20px;
+    border-bottom: 2px solid rgba(141,110,99,0.3);
+  }
+
+  /* ── Hero ── */
+  #hero {
+    padding: 0;
+    border-bottom: none;
+    position: relative;
+    background: var(--dark);
+  }
+  #hero-canvas {
+    width: 100%;
+    height: 320px;
+    display: block;
+    image-rendering: pixelated;
+  }
+  .hero-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 20px 20px 28px;
+    background: linear-gradient(transparent, rgba(30,18,10,0.92) 50%);
+  }
+  .hero-overlay h1 { text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+  .hero-tagline {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 6px;
+    opacity: 0.9;
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    display: inline-block;
+    background: var(--btn);
+    color: var(--btnText);
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+  }
+
+  /* ── Core Loop ── */
+  .loop-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .loop-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(141,110,99,0.3);
+    border-radius: 4px;
+    padding: 10px 14px;
+  }
+  .loop-step-num {
+    font-size: 1.4rem;
+    color: var(--gold);
+    min-width: 32px;
+    text-align: center;
+    line-height: 1;
+  }
+  .loop-step-text h3 { color: var(--cream); margin: 0; font-size: 0.9rem; }
+  .loop-step-text p  { font-size: 0.75rem; opacity: 0.7; margin: 0; }
+  .loop-arrow {
+    text-align: center;
+    color: var(--gold);
+    opacity: 0.5;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .flower-demos {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .flower-demos::-webkit-scrollbar { display: none; }
+
+  .flower-demo-card {
+    flex: 0 0 auto;
+    text-align: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(141,110,99,0.25);
+    border-radius: 4px;
+    padding: 8px;
+  }
+  .flower-demo-card canvas {
+    display: block;
+    image-rendering: pixelated;
+  }
+  .flower-demo-card .flower-name {
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── Horses Carousel ── */
+  .horse-carousel {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 8px 0 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .horse-carousel::-webkit-scrollbar { display: none; }
+
+  .horse-card {
+    flex: 0 0 140px;
+    scroll-snap-align: start;
+    background: rgba(62,39,35,0.8);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .horse-card canvas {
+    display: block;
+    image-rendering: pixelated;
+    border-radius: 3px;
+    background: #2A1A10;
+  }
+  .horse-card .horse-name {
+    font-size: 0.75rem;
+    color: var(--gold);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .horse-card .horse-perk {
+    font-size: 0.65rem;
+    color: var(--green);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .horse-card .horse-desc {
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.4;
+    opacity: 0.8;
+  }
+  .horse-card.mystery {
+    background: rgba(20,12,8,0.9);
+    border-color: rgba(141,110,99,0.2);
+  }
+  .horse-card.mystery .mystery-icon {
+    width: 140px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1A0E08;
+    border-radius: 3px;
+    font-size: 2rem;
+    opacity: 0.3;
+  }
+  .horse-card.mystery .horse-name { color: var(--muted); opacity: 0.5; }
+  .horse-card.mystery .horse-perk { opacity: 0.3; }
+
+  .carousel-hint {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--muted);
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+
+  /* ── Trust ── */
+  .trust-scene {
+    background: rgba(30,18,10,0.5);
+    border: 1px solid rgba(141,110,99,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .trust-scene canvas {
+    display: block;
+    width: 100%;
+    image-rendering: pixelated;
+  }
+  .trust-hearts {
+    display: flex;
+    gap: 6px;
+    padding: 12px 16px;
+    align-items: center;
+    border-top: 1px solid rgba(141,110,99,0.2);
+  }
+  .heart {
+    font-size: 1.1rem;
+    transition: opacity 0.4s;
+  }
+  .heart.filled { opacity: 1; }
+  .heart.empty  { opacity: 0.2; filter: grayscale(1); }
+  .trust-label  {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  .trust-quote {
+    font-size: 0.8rem;
+    color: var(--gold);
+    font-style: italic;
+    text-align: center;
+    margin-top: 8px;
+    padding: 0 8px;
+    line-height: 1.5;
+  }
+
+  /* ── Farm ── */
+  .farm-preview {
+    border: 1px solid rgba(141,110,99,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 16px 0;
+    background: #1A0E08;
+  }
+  .farm-preview canvas {
+    display: block;
+    width: 100%;
+    image-rendering: pixelated;
+  }
+
+  /* ── Perks / Infinity ── */
+  .perk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .perk-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(141,110,99,0.2);
+    border-radius: 4px;
+    padding: 8px 12px;
+  }
+  .perk-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .perk-row h3 { color: var(--cream); font-size: 0.8rem; margin: 0; }
+  .perk-row p  { font-size: 0.7rem; margin: 0; opacity: 0.65; }
+  .perk-bar-wrap {
+    margin-top: 3px;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .perk-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--gold);
+    transform-origin: left;
+    animation: growBar 1.5s ease-out both;
+  }
+  @keyframes growBar {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  /* ── Footer ── */
+  #footer {
+    text-align: center;
+    padding: 40px 20px 60px;
+    border-bottom: none;
+    background: linear-gradient(transparent, rgba(20,10,5,0.6));
+  }
+  #footer canvas {
+    display: block;
+    margin: 0 auto 16px;
+    image-rendering: pixelated;
+    border-radius: 4px;
+  }
+  .play-btn {
+    display: inline-block;
+    background: var(--btn);
+    color: var(--btnText);
+    padding: 14px 32px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: 2px solid var(--gold);
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background 0.2s;
+    margin-top: 20px;
+  }
+  .play-btn:hover, .play-btn:focus { background: #5D4037; outline: none; }
+  .footer-love {
+    margin-top: 24px;
+    font-size: 0.7rem;
+    color: var(--muted);
+    opacity: 0.6;
+    line-height: 1.8;
+  }
+
+  /* ── Scroll animation ── */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 0 20px;
+    opacity: 0.4;
+  }
+</style>
+</head>
+<body>
+
+<!-- ─────────────── HERO ─────────────── -->
+<section id="hero">
+  <canvas id="hero-canvas" width="420" height="320"></canvas>
+  <div class="hero-overlay">
+    <h1>Pony Pastures</h1>
+    <p class="hero-tagline">A cozy horse farm for your pocket</p>
+  </div>
+</section>
+
+<!-- ─────────────── CORE LOOP ─────────────── -->
+<section id="core-loop" class="fade-in">
+  <span class="section-label">How it works</span>
+  <h2>The Core Loop</h2>
+  <p>A rhythm as old as farming — tend your garden, earn trust, watch something beautiful grow.</p>
+
+  <div class="loop-steps">
+    <div class="loop-step">
+      <div class="loop-step-num">1</div>
+      <div class="loop-step-text">
+        <h3>Plant a seed</h3>
+        <p>Choose from 14 wildflowers, each with its own character.</p>
+      </div>
+    </div>
+    <div class="loop-arrow">↓</div>
+    <div class="loop-step">
+      <div class="loop-step-num">2</div>
+      <div class="loop-step-text">
+        <h3>Water &amp; wait</h3>
+        <p>Watch sprouts emerge. Growth takes patience, not pressure.</p>
+      </div>
+    </div>
+    <div class="loop-arrow">↓</div>
+    <div class="loop-step">
+      <div class="loop-step-num">3</div>
+      <div class="loop-step-text">
+        <h3>Harvest the bloom</h3>
+        <p>A satisfying tap. Earn coins or save flowers to feed horses.</p>
+      </div>
+    </div>
+    <div class="loop-arrow">↓</div>
+    <div class="loop-step">
+      <div class="loop-step-num">4</div>
+      <div class="loop-step-text">
+        <h3>Earn a horse's trust</h3>
+        <p>Wild horses visit. Feed them what they love. Slowly, they stay.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <h3 style="color: var(--muted); margin-bottom: 10px; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase;">14 Wildflowers</h3>
+    <div class="flower-demos" id="flower-demos"></div>
+  </div>
+</section>
+
+<!-- ─────────────── HORSES ─────────────── -->
+<section id="horses" class="fade-in">
+  <span class="section-label">14 Horses</span>
+  <h2>Meet the Herd</h2>
+  <p>Each horse has a flower it loves. Discover which, grow fields of it, wait. One morning — there she is at the fence.</p>
+
+  <div class="horse-carousel" id="horse-carousel"></div>
+  <p class="carousel-hint">← scroll to see more →</p>
+</section>
+
+<!-- ─────────────── TRUST ─────────────── -->
+<section id="trust" class="fade-in">
+  <span class="section-label">The Heart of the Game</span>
+  <h2>Trust &amp; Discovery</h2>
+
+  <div class="trust-scene">
+    <canvas id="trust-canvas" width="380" height="140"></canvas>
+    <div class="trust-hearts" id="trust-hearts">
+      <span class="heart filled">♥</span>
+      <span class="heart filled">♥</span>
+      <span class="heart filled">♥</span>
+      <span class="heart empty">♥</span>
+      <span class="heart empty">♥</span>
+      <span class="heart empty">♥</span>
+      <span class="heart empty">♥</span>
+      <span class="trust-label">4 / 7 trust</span>
+    </div>
+  </div>
+
+  <p class="trust-quote">"You don't catch horses. You earn them."</p>
+
+  <div style="margin-top: 16px;">
+    <p>A wild horse appears because you grew something it loves. Feed it the right flower and trust inches up — but only once per visit. Rush it and the horse spooks.</p>
+    <br>
+    <p style="color: var(--muted); font-size: 0.75rem;">Common horses take a handful of feedings. The rarest take many sessions. This is the heart of the game: a relationship on the horse's terms.</p>
+  </div>
+</section>
+
+<!-- ─────────────── FARM ─────────────── -->
+<section id="farm" class="fade-in">
+  <span class="section-label">Your Growing Farm</span>
+  <h2>Start Small. Expand Forever.</h2>
+  <p>Begin with one small garden. Earn coins, buy more plots, expand your fields. Each plot can hold up to 25 gardens.</p>
+
+  <div class="farm-preview">
+    <canvas id="farm-canvas" width="380" height="200"></canvas>
+  </div>
+
+  <p style="color: var(--muted); font-size: 0.75rem; margin-top: 8px;">Tap a plot to zoom in and tend it. Zoom out to see your whole farm at a glance — a patchwork of blooming gardens.</p>
+</section>
+
+<!-- ─────────────── INFINITY LOOP ─────────────── -->
+<section id="infinity" class="fade-in">
+  <span class="section-label">The Infinity Loop</span>
+  <h2>Every Horse Makes You Stronger</h2>
+  <p>Tame a horse and its passive perk kicks in. Keep feeding it and the perk levels up. Stack enough horses and your farm practically tends itself.</p>
+
+  <div class="perk-list" id="perk-list"></div>
+
+  <p style="margin-top: 16px; color: var(--gold); font-size: 0.8rem; font-style: italic; text-align: center;">"Every horse makes your farm better.<br>Every farm attracts rarer horses."</p>
+</section>
+
+<!-- ─────────────── FOOTER ─────────────── -->
+<section id="footer" class="fade-in">
+  <canvas id="footer-canvas" width="200" height="120"></canvas>
+  <h2>Open on your phone</h2>
+  <p style="opacity: 0.7; font-size: 0.8rem;">Pony Pastures is a web app — no install needed. Just open it in your mobile browser and add to your home screen.</p>
+  <a href="index.html" class="play-btn">Open Pony Pastures</a>
+  <p class="footer-love">
+    No timers. No notifications. No punishment.<br>
+    Just dirt, seeds, patience, and wild horses.<br><br>
+    Built with love — pixel by pixel.
+  </p>
+</section>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// INLINED GAME DATA — from data.js
+// ════════════════════════════════════════════════════════════════════════════
+
+const PALETTE = {
+  skyDay:     '#F5E6D0',
+  groundDay:  '#C8A96E',
+  plotEmpty:  '#A0785A',
+  plotSoil:   '#7B5033',
+  grassDay:   '#8DB85A',
+  uiBarDay:   '#8B7355',
+  textDay:    '#3E2723',
+  skyNight:   '#1A2340',
+  groundNight:'#2C3E50',
+  grassNight: '#1B5E20',
+  uiBarNight: '#1A2340',
+  textNight:  '#E8D5B0',
+  coinGold:   '#FFD54F',
+  btnBg:      '#6D4C41',
+  btnText:    '#FFF8E1',
+};
+
+const DAY_DURATION   = 120; // seconds — faster for showcase
+const NIGHT_FRACTION = 0.4;
+
+const FLOWERS = {
+  daisy:      { id:'daisy',      name:'Daisy',      colors:{ seed:'#8B6914', sprout:'#6aaa4a', bloom:'#FFFDE7', center:'#FFD54F' } },
+  lavender:   { id:'lavender',   name:'Lavender',   colors:{ seed:'#8B6914', sprout:'#81C784', bloom:'#CE93D8', center:'#9C27B0' } },
+  sunflower:  { id:'sunflower',  name:'Sunflower',  colors:{ seed:'#8B6914', sprout:'#66BB6A', bloom:'#FFD600', center:'#5D4037' } },
+  clover:     { id:'clover',     name:'Clover',     colors:{ seed:'#8B6914', sprout:'#4CAF50', bloom:'#F48FB1', center:'#E53935' } },
+  rosehip:    { id:'rosehip',    name:'Rosehip',    colors:{ seed:'#8B6914', sprout:'#81C784', bloom:'#EF5350', center:'#880E4F' } },
+  bluebell:   { id:'bluebell',   name:'Bluebell',   colors:{ seed:'#8B6914', sprout:'#66BB6A', bloom:'#7986CB', center:'#283593' } },
+  marigold:   { id:'marigold',   name:'Marigold',   colors:{ seed:'#8B6914', sprout:'#66BB6A', bloom:'#FF8F00', center:'#BF360C' } },
+  moonpetal:  { id:'moonpetal',  name:'Moonpetal',  colors:{ seed:'#8B6914', sprout:'#80DEEA', bloom:'#E1F5FE', center:'#7986CB' } },
+  thistle:    { id:'thistle',    name:'Thistle',    colors:{ seed:'#8B6914', sprout:'#7CB87A', bloom:'#BA68C8', center:'#6A1B9A' } },
+  peony:      { id:'peony',      name:'Peony',      colors:{ seed:'#8B6914', sprout:'#81C784', bloom:'#F48FB1', center:'#AD1457' } },
+  fern:       { id:'fern',       name:'Fern',       colors:{ seed:'#8B6914', sprout:'#4CAF50', bloom:'#2E7D32', center:'#1B5E20' } },
+  goldenrod:  { id:'goldenrod',  name:'Goldenrod',  colors:{ seed:'#8B6914', sprout:'#A5D6A7', bloom:'#FFD600', center:'#F57F17' } },
+  nightshade: { id:'nightshade', name:'Nightshade', colors:{ seed:'#8B6914', sprout:'#4A4070', bloom:'#7B1FA2', center:'#1A0030' } },
+  sunrose:    { id:'sunrose',    name:'Sunrose',    colors:{ seed:'#8B6914', sprout:'#FFF176', bloom:'#FF6F00', center:'#FFD54F' } },
+};
+
+const HORSES = {
+  chestnutMare:    { id:'chestnutMare',    name:'Chestnut Mare',   perk:'Auto-Plow',      desc:'Plows plots after each harvest',         colors:{ body:'#8B3A2A', mane:'#5C1F10', eye:'#2C1810', nose:'#7A2E1E' } },
+  appaloosa:       { id:'appaloosa',       name:'Appaloosa',       perk:'Market Eye',     desc:'Flowers sell for more coins',            colors:{ body:'#D4B896', mane:'#5C4A32', eye:'#2C1810', nose:'#C4A882' } },
+  paintHorse:      { id:'paintHorse',      name:'Paint Horse',     perk:'Swift Growth',   desc:'Flowers grow faster',                    colors:{ body:'#E8D5B0', mane:'#3E2210', eye:'#2C1810', nose:'#D4C09A' } },
+  goldenPalomino:  { id:'goldenPalomino',  name:'Golden Palomino', perk:'Golden Touch',   desc:'Chance to double each harvest',          colors:{ body:'#D4A832', mane:'#F5E0A0', eye:'#2C1810', nose:'#C09828' } },
+  blackStallion:   { id:'blackStallion',   name:'Black Stallion',  perk:'Night Bounty',   desc:'Bonus coins for selling at night',       colors:{ body:'#1A1208', mane:'#0A0804', eye:'#4A3020', nose:'#120C04' } },
+  frostPony:       { id:'frostPony',       name:'Frost Pony',      perk:'Frost Seeds',    desc:'Chance for a free seed on harvest',      colors:{ body:'#D8E8F0', mane:'#B0C8DC', eye:'#3A5060', nose:'#C4D8E8' } },
+  shadowRunner:    { id:'shadowRunner',    name:'Shadow Runner',   perk:'Hidden Coins',   desc:'Harvests reveal bonus coins',            colors:{ body:'#2A2038', mane:'#1A1228', eye:'#8060A0', nose:'#1E1830' } },
+  starlightUnicorn:{ id:'starlightUnicorn',name:'Starlight Unicorn',perk:'Star Blessing', desc:'All coins multiplied',                   colors:{ body:'#EEE8FF', mane:'#C8A8F0', eye:'#6040A8', nose:'#DDD4F8' } },
+  stormStallion:   { id:'stormStallion',   name:'Storm Stallion',  perk:'Tempest Water',  desc:'Auto-waters plots on a timer',           colors:{ body:'#3A4A6A', mane:'#1A2848', eye:'#A0C0FF', nose:'#2A3858' } },
+  harvestQueen:    { id:'harvestQueen',    name:'Harvest Queen',   perk:'Royal Harvest',  desc:'Auto-harvests ready plots',              colors:{ body:'#8B5E2A', mane:'#C8940A', eye:'#5A3010', nose:'#7A4E1A' } },
+  meadowSpirit:    { id:'meadowSpirit',    name:'Meadow Spirit',   perk:'Regrowth',       desc:'Chance to auto-replant on harvest',      colors:{ body:'#5A8A3A', mane:'#3A6A1A', eye:'#1A4A0A', nose:'#4A7828' } },
+  goldenHerd:      { id:'goldenHerd',      name:'Golden Herd',     perk:'Herd Wealth',    desc:'Passive coins per second per horse',     colors:{ body:'#D4A832', mane:'#FFE066', eye:'#5A3800', nose:'#B89020' } },
+  phantomMare:     { id:'phantomMare',     name:'Phantom Mare',    perk:'Phantom Boost',  desc:'Doubles other horses\' perk levels',    colors:{ body:'#1A0830', mane:'#3A1060', eye:'#C060FF', nose:'#120620' } },
+  sunChariot:      { id:'sunChariot',      name:'Sun Chariot',     perk:'Eternal Day',    desc:'Big sell bonus during daytime',          colors:{ body:'#E8A030', mane:'#FFF0A0', eye:'#3A1800', nose:'#C88020' } },
+};
+
+const HORSE_LIST = Object.values(HORSES);
+const FLOWER_LIST = Object.values(FLOWERS);
+
+// ════════════════════════════════════════════════════════════════════════════
+// INLINED RENDERING — from render.js
+// ════════════════════════════════════════════════════════════════════════════
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
+}
+function lerpColor(hexA, hexB, t) {
+  const a = hexToRgb(hexA), b = hexToRgb(hexB);
+  const r = Math.round(a.r + (b.r-a.r)*t);
+  const g = Math.round(a.g + (b.g-a.g)*t);
+  const bl= Math.round(a.b + (b.b-a.b)*t);
+  return `rgb(${r},${g},${bl})`;
+}
+
+function nightFactor(elapsed) {
+  const cycle = (elapsed % DAY_DURATION) / DAY_DURATION;
+  const nightStart = 0.5 - NIGHT_FRACTION/2;
+  const nightEnd   = 0.5 + NIGHT_FRACTION/2;
+  const transWidth = 0.1;
+  if (cycle < nightStart - transWidth) return 0;
+  if (cycle < nightStart) return (cycle - (nightStart - transWidth)) / transWidth;
+  if (cycle < nightEnd)   return 1;
+  if (cycle < nightEnd + transWidth) return 1 - (cycle - nightEnd) / transWidth;
+  return 0;
+}
+
+function blendPalette(nf) {
+  return {
+    sky:    lerpColor(PALETTE.skyDay,    PALETTE.skyNight,    nf),
+    ground: lerpColor(PALETTE.groundDay, PALETTE.groundNight, nf),
+    grass:  lerpColor(PALETTE.grassDay,  PALETTE.grassNight,  nf),
+    uiBar:  lerpColor(PALETTE.uiBarDay,  PALETTE.uiBarNight,  nf),
+    text:   lerpColor(PALETTE.textDay,   PALETTE.textNight,   nf),
+  };
+}
+
+function drawSky(ctx, W, H, pal, nf) {
+  const grad = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+  if (nf > 0.05) {
+    grad.addColorStop(0, lerpColor('#0D1628','#1A2340',nf));
+    grad.addColorStop(1, pal.sky);
+  } else {
+    grad.addColorStop(0, '#E8D4B0');
+    grad.addColorStop(1, pal.sky);
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawCelestialBody(ctx, W, H, nf, elapsed) {
+  const cycle = (elapsed % DAY_DURATION) / DAY_DURATION;
+  const sunAngle = cycle * Math.PI;
+  const sunX = W * 0.15 + Math.cos(Math.PI - sunAngle) * W * 0.4 + W * 0.35;
+  const sunY = H * 0.25 - Math.sin(sunAngle) * H * 0.2;
+
+  if (nf < 0.8) {
+    const alpha = 1 - nf;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const grad = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, 32);
+    grad.addColorStop(0, '#FFF9C4');
+    grad.addColorStop(0.35, '#FFD54F');
+    grad.addColorStop(0.7, 'rgba(255,200,50,0.3)');
+    grad.addColorStop(1, 'rgba(255,213,79,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(sunX, sunY, 32, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFF9C4';
+    ctx.beginPath(); ctx.arc(sunX, sunY, 9, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFE082';
+    ctx.globalAlpha = alpha * 0.5;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i/8)*Math.PI*2 + elapsed*0.3;
+      ctx.fillRect(Math.round(sunX+Math.cos(angle)*14)-1, Math.round(sunY+Math.sin(angle)*14)-1, 3, 3);
+    }
+    ctx.restore();
+  }
+
+  if (nf > 0.2) {
+    const moonX = W * 0.75, moonY = H * 0.12;
+    const alpha = Math.min(1, nf * 1.5);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const moonGrad = ctx.createRadialGradient(moonX, moonY, 5, moonX, moonY, 20);
+    moonGrad.addColorStop(0, 'rgba(232,224,200,0.4)');
+    moonGrad.addColorStop(1, 'rgba(232,224,200,0)');
+    ctx.fillStyle = moonGrad;
+    ctx.beginPath(); ctx.arc(moonX, moonY, 20, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#E8E0D0';
+    ctx.beginPath(); ctx.arc(moonX, moonY, 9, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = lerpColor('#0D1628','#1A2340',nf);
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.beginPath(); ctx.arc(moonX+4, moonY-2, 8, 0, Math.PI*2); ctx.fill();
+    const stars = [
+      [0.12,0.05],[0.28,0.03],[0.42,0.07],[0.55,0.09],[0.68,0.04],
+      [0.82,0.06],[0.06,0.10],[0.20,0.11],[0.35,0.13],[0.50,0.14],
+      [0.62,0.11],[0.88,0.08],[0.95,0.05],[0.15,0.15],[0.72,0.14],
+    ];
+    for (const [sx,sy] of stars) {
+      const twinkle = 0.5 + 0.5*Math.sin(elapsed*2 + sx*20 + sy*30);
+      ctx.globalAlpha = alpha * twinkle * 0.85;
+      ctx.fillStyle = '#FFF9E6';
+      ctx.fillRect(Math.round(sx*W)-1, Math.round(sy*H)-1, sx < 0.3 ? 2 : 1, sx < 0.3 ? 2 : 1);
+    }
+    ctx.restore();
+  }
+}
+
+function drawFence(ctx, W, gardenTop, nf) {
+  const fenceY = gardenTop - 20;
+  const postColor = nf > 0.5 ? '#6B5010' : '#8B6914';
+  const railColor = nf > 0.5 ? '#7A6012' : '#A07820';
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.fillRect(0, fenceY+20, W, 3);
+  ctx.fillStyle = railColor;
+  ctx.fillRect(0, fenceY+4, W, 4);
+  ctx.fillRect(0, fenceY+13, W, 4);
+  ctx.fillStyle = nf > 0.5 ? '#8B7020' : '#C09030';
+  ctx.fillRect(0, fenceY+4, W, 1);
+  ctx.fillRect(0, fenceY+13, W, 1);
+  ctx.fillStyle = postColor;
+  for (let x = 0; x < W; x += 38) {
+    ctx.fillRect(x, fenceY, 5, 20);
+    ctx.fillRect(x-1, fenceY, 7, 3);
+  }
+}
+
+function drawMeadowFlowers(ctx, W, gardenTop, pal, nf, now) {
+  const meadowY = gardenTop - 8;
+  const t = now / 1000;
+  const positions = [
+    {x:0.08,col:'#FFFDE7'},{x:0.18,col:'#CE93D8'},{x:0.27,col:'#FFD600'},
+    {x:0.38,col:'#EF9A9A'},{x:0.48,col:'#7986CB'},{x:0.57,col:'#FF8F00'},
+    {x:0.67,col:'#CE93D8'},{x:0.78,col:'#FFFDE7'},{x:0.87,col:'#E1F5FE'},
+    {x:0.93,col:'#FFD600'},
+  ];
+  ctx.save();
+  ctx.globalAlpha = nf > 0.5 ? 0.35 : 0.65;
+  for (const {x, col} of positions) {
+    const px = Math.round(x * W);
+    const bob = Math.sin(t*1.2 + x*10) * 1.5;
+    const py = meadowY + bob;
+    ctx.fillStyle = pal.grass;
+    ctx.fillRect(px, py, 2, 4);
+    ctx.fillStyle = col;
+    ctx.fillRect(px-2, py-3, 2, 2);
+    ctx.fillRect(px+2, py-3, 2, 2);
+    ctx.fillRect(px,   py-5, 2, 2);
+    ctx.fillRect(px,   py-1, 2, 2);
+    ctx.fillStyle = '#FFD54F';
+    ctx.fillRect(px, py-3, 2, 2);
+  }
+  ctx.restore();
+}
+
+function drawGrassTufts(ctx, W, y, color) {
+  ctx.fillStyle = color;
+  const spacing = Math.round(W / 18);
+  for (let i = 0; i < W; i += spacing) {
+    ctx.fillRect(i,     y-5, 2, 5);
+    ctx.fillRect(i+3,   y-7, 2, 7);
+    ctx.fillRect(i+6,   y-4, 2, 4);
+    if ((i/spacing)%2 === 0) ctx.fillRect(i-2, y-3, 2, 3);
+  }
+  ctx.fillRect(0, y, W, 3);
+}
+
+function drawCampfire(ctx, W, gardenTop, nf, now) {
+  const fenceY = gardenTop - 20;
+  const cx = Math.round(W * 0.18), cy = fenceY + 2;
+  const t = now / 1000;
+  const alpha = Math.min(1, (nf - 0.15) / 0.35);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const glowR = 26 + 4*Math.sin(t*3);
+  const glow = ctx.createRadialGradient(cx, cy+4, 2, cx, cy+4, glowR);
+  glow.addColorStop(0, 'rgba(255,140,40,0.35)');
+  glow.addColorStop(0.5, 'rgba(255,100,20,0.15)');
+  glow.addColorStop(1, 'rgba(255,80,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(cx-glowR, cy+4-glowR, glowR*2, glowR*2);
+  ctx.fillStyle = '#5C3A1A';
+  ctx.fillRect(cx-6, cy+4, 12, 3);
+  ctx.save(); ctx.translate(cx,cy+5); ctx.rotate(0.4);  ctx.fillRect(-6,-1,12,3); ctx.restore();
+  ctx.save(); ctx.translate(cx,cy+5); ctx.rotate(-0.4); ctx.fillRect(-6,-1,12,3); ctx.restore();
+  const f1 = Math.sin(t*7.3)*2, f2 = Math.sin(t*5.1+1)*1.5;
+  ctx.globalAlpha = alpha*0.7; ctx.fillStyle = '#FF6020';
+  ctx.fillRect(cx-5, cy-5+f1, 3, 8); ctx.fillRect(cx+3, cy-4+f2, 3, 7);
+  ctx.globalAlpha = alpha*0.85; ctx.fillStyle = '#FFAA30';
+  ctx.fillRect(cx-3, cy-4+f2, 3, 7); ctx.fillRect(cx+1, cy-3+f1, 3, 6);
+  ctx.globalAlpha = alpha; ctx.fillStyle = '#FFE060';
+  ctx.fillRect(cx-1, cy-5+f1*0.5, 3, 6);
+  for (let i = 0; i < 3; i++) {
+    const st = (t*1.2 + i*0.7) % 2.0;
+    if (st < 1.5) {
+      ctx.globalAlpha = alpha*(1-st/1.5)*0.8;
+      ctx.fillStyle = '#FFD060';
+      ctx.fillRect(Math.round(cx+Math.sin(t*4+i*2)*5), Math.round(cy-8-st*12), 1, 1);
+    }
+  }
+  ctx.restore();
+}
+
+// ── Flower drawing ────────────────────────────────────────────────────────
+
+function drawBloom(ctx, flower, cx, baseY, w, h, now, idx) {
+  const stemH = Math.round(h * 0.44);
+  const r = Math.max(4, Math.round(w * 0.21));
+  const bTop = baseY - stemH - r*2;
+  const bob = Math.sin(now/1800 + idx*0.8) * 0.8;
+  const bx = cx + Math.round(bob);
+  ctx.fillStyle = flower.colors.sprout;
+  ctx.fillRect(bx-1, baseY-stemH, 2, stemH);
+  ctx.fillRect(bx-6, baseY-stemH+5, 5, 2);
+  ctx.fillRect(bx+2, baseY-stemH+10, 5, 2);
+  switch (flower.id) {
+    case 'daisy':       drawDaisy(ctx, flower, bx, bTop, r); break;
+    case 'lavender':    drawLavender(ctx, flower, bx, bTop, r, stemH, baseY, now, idx); break;
+    case 'sunflower':   drawSunflower(ctx, flower, bx, bTop, r); break;
+    case 'clover':      drawClover(ctx, flower, bx, bTop, r); break;
+    case 'rosehip':     drawRosehip(ctx, flower, bx, bTop, r); break;
+    case 'bluebell':    drawBluebellFlower(ctx, flower, bx, bTop, r); break;
+    case 'marigold':    drawMarigold(ctx, flower, bx, bTop, r); break;
+    case 'moonpetal':   drawMoonpetal(ctx, flower, bx, bTop, r, now, idx); break;
+    case 'thistle':     drawThistleFlower(ctx, flower, bx, bTop, r, now, idx); break;
+    case 'peony':       drawPeony(ctx, flower, bx, bTop, r); break;
+    case 'fern':        drawFernFlower(ctx, flower, bx, bTop, r, stemH, baseY); break;
+    case 'goldenrod':   drawGoldenrod(ctx, flower, bx, bTop, r, now, idx); break;
+    case 'nightshade':  drawNightshade(ctx, flower, bx, bTop, r, now, idx); break;
+    case 'sunrose':     drawSunrose(ctx, flower, bx, bTop, r, now, idx); break;
+    default:            drawGenericFlower(ctx, flower, bx, bTop, r); break;
+  }
+}
+
+function drawDaisy(ctx, f, cx, bTop, r) {
+  const cy = bTop+r;
+  ctx.fillStyle = f.colors.bloom;
+  const offs = [[0,-r-2,4,r],[r+1,-r+2,r,4],[0,2,4,r],[-r-1,-r+2,r,4],[-r,-r-1,r,4],[2,-r-1,r,4],[-r,2,r,4],[2,2,r,4]];
+  for (const [ox,oy,pw,ph] of offs) ctx.fillRect(cx+ox-2, cy+oy, pw, ph);
+  ctx.fillStyle = f.colors.center;
+  ctx.fillRect(cx-3,cy-3,6,6);
+  ctx.fillStyle = '#FFF176'; ctx.fillRect(cx-1,cy-1,2,2);
+}
+function drawLavender(ctx, f, cx, bTop, r, stemH, baseY, now, idx) {
+  const spikeTop = bTop+r;
+  ctx.fillStyle = f.colors.sprout; ctx.fillRect(cx-1,spikeTop,2,r*3);
+  for (let i = 0; i < 5; i++) {
+    const by2 = spikeTop + i*(r*3/5), side = i%2===0?-4:3;
+    ctx.fillStyle = f.colors.bloom; ctx.fillRect(cx+side,by2,3,3);
+    ctx.fillStyle = f.colors.sprout; ctx.fillRect(cx, by2+1, side<0?side+1:side, 1);
+  }
+  ctx.fillStyle = f.colors.center; ctx.fillRect(cx-2,spikeTop-3,4,4);
+}
+function drawSunflower(ctx, f, cx, bTop, r) {
+  const cy = bTop+r, bigR = r+3;
+  ctx.fillStyle = f.colors.bloom;
+  for (let i = 0; i < 8; i++) {
+    const a=(i/8)*Math.PI*2, px=Math.round(cx+Math.cos(a)*bigR), py=Math.round(cy+Math.sin(a)*bigR);
+    ctx.fillRect(px-2,py-2,5,5);
+  }
+  for (let i = 0; i < 8; i++) {
+    const a=(i/8+1/16)*Math.PI*2, px=Math.round(cx+Math.cos(a)*(bigR-2)), py=Math.round(cy+Math.sin(a)*(bigR-2));
+    ctx.fillRect(px-1,py-1,3,3);
+  }
+  ctx.fillStyle = f.colors.center;
+  const cr = Math.max(4,r-1); ctx.fillRect(cx-cr,cy-cr,cr*2,cr*2);
+  ctx.fillStyle='rgba(0,0,0,0.3)';
+  ctx.fillRect(cx-2,cy-2,2,2); ctx.fillRect(cx+1,cy-2,2,2);
+  ctx.fillRect(cx-2,cy+1,2,2); ctx.fillRect(cx+1,cy+1,2,2);
+}
+function drawClover(ctx, f, cx, bTop, r) {
+  const cy = bTop+r+2;
+  ctx.fillStyle = f.colors.bloom;
+  ctx.fillRect(cx-3,cy-r-2,6,6); ctx.fillRect(cx-r-1,cy,5,5); ctx.fillRect(cx+r-3,cy,5,5);
+  ctx.fillStyle = f.colors.center;
+  ctx.fillRect(cx-1,cy-r,2,2); ctx.fillRect(cx-r+1,cy+1,2,2); ctx.fillRect(cx+r-2,cy+1,2,2);
+  ctx.fillStyle='#FF6060'; ctx.fillRect(cx-2,cy-1,4,4);
+}
+function drawRosehip(ctx, f, cx, bTop, r) {
+  const cy = bTop+r;
+  ctx.fillStyle = f.colors.bloom;
+  for (let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2,px=Math.round(cx+Math.cos(a)*(r-1)),py=Math.round(cy+Math.sin(a)*(r-1));ctx.fillRect(px-3,py-3,6,6);}
+  ctx.fillStyle='#C0384A';
+  for (let i=0;i<5;i++){const a=(i/5)*Math.PI*2,px=Math.round(cx+Math.cos(a)*Math.floor(r*0.5)),py=Math.round(cy+Math.sin(a)*Math.floor(r*0.5));ctx.fillRect(px-2,py-2,4,4);}
+  ctx.fillStyle=f.colors.center; ctx.fillRect(cx-2,cy-2,5,5);
+  ctx.fillStyle='#FFB0C0'; ctx.fillRect(cx-1,cy-1,2,2);
+}
+function drawBluebellFlower(ctx, f, cx, bTop, r) {
+  const bellY = bTop+r;
+  const bells=[{ox:-r,angle:-0.3},{ox:0,angle:0},{ox:r,angle:0.3}];
+  for (const {ox,angle} of bells) {
+    const bx=cx+ox;
+    ctx.save(); ctx.translate(bx,bellY); ctx.rotate(angle*0.4);
+    ctx.fillStyle=f.colors.bloom;
+    ctx.fillRect(-3,0,6,3); ctx.fillRect(-4,3,8,4); ctx.fillRect(-3,7,6,2);
+    ctx.fillStyle='#9FA8DA'; ctx.fillRect(-1,1,2,6);
+    ctx.fillStyle=f.colors.center; ctx.fillRect(-1,9,2,2);
+    ctx.restore();
+    ctx.fillStyle=f.colors.sprout; ctx.fillRect(bx,bTop+1,1,r-1);
+  }
+}
+function drawMarigold(ctx, f, cx, bTop, r) {
+  const cy=bTop+r;
+  ctx.fillStyle=f.colors.bloom;
+  for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2,px=Math.round(cx+Math.cos(a)*r),py=Math.round(cy+Math.sin(a)*r);ctx.fillRect(px-3,py-3,6,6);}
+  ctx.fillStyle='#FFA000';
+  for(let i=0;i<8;i++){const a=(i/8+0.5/8)*Math.PI*2,pr=Math.round(r*0.6),px=Math.round(cx+Math.cos(a)*pr),py=Math.round(cy+Math.sin(a)*pr);ctx.fillRect(px-2,py-2,5,5);}
+  ctx.fillStyle=f.colors.center; ctx.fillRect(cx-3,cy-3,7,7);
+  ctx.fillStyle='#FF6D00'; ctx.fillRect(cx-1,cy-1,3,3);
+}
+function drawMoonpetal(ctx, f, cx, bTop, r, now, idx) {
+  const cy=bTop+r, t=now/1000;
+  const shimmer=0.3+0.2*Math.sin(t*2+idx);
+  ctx.save(); ctx.globalAlpha=shimmer;
+  const glowGrad=ctx.createRadialGradient(cx,cy,r-2,cx,cy,r+5);
+  glowGrad.addColorStop(0,'rgba(200,220,255,0.6)'); glowGrad.addColorStop(1,'rgba(200,220,255,0)');
+  ctx.fillStyle=glowGrad; ctx.fillRect(cx-r-6,cy-r-6,(r+6)*2,(r+6)*2);
+  ctx.restore();
+  ctx.fillStyle=f.colors.bloom;
+  for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2,px=Math.round(cx+Math.cos(a)*r),py=Math.round(cy+Math.sin(a)*r);ctx.fillRect(px-3,py-3,6,6);}
+  ctx.fillStyle='#B3D4F0';
+  for(let i=0;i<6;i++){const a=(i/6+0.5/6)*Math.PI*2,pr=Math.round(r*0.6),px=Math.round(cx+Math.cos(a)*pr),py=Math.round(cy+Math.sin(a)*pr);ctx.fillRect(px-2,py-2,4,4);}
+  ctx.fillStyle=f.colors.center; ctx.fillRect(cx-3,cy-3,6,6);
+  const sa=0.6+0.4*Math.sin(t*3+idx*1.7);
+  ctx.save(); ctx.globalAlpha=sa; ctx.fillStyle='#FFFFFF';
+  ctx.fillRect(cx-1,cy-3,2,1); ctx.fillRect(cx-3,cy-1,1,2); ctx.fillRect(cx+2,cy-1,1,2);
+  ctx.restore();
+}
+function drawGenericFlower(ctx, f, cx, bTop, r) {
+  const cy=bTop+r;
+  ctx.fillStyle=f.colors.bloom;
+  ctx.fillRect(cx-1-r,cy+r-2,r,r>6?5:4); ctx.fillRect(cx+2,cy+r-2,r,r>6?5:4);
+  ctx.fillRect(cx-2,bTop,r>6?5:4,r); ctx.fillRect(cx-2,cy+r*2-2,r>6?5:4,r);
+  ctx.fillStyle=f.colors.center; ctx.fillRect(cx-3,cy-3,6,6);
+}
+function drawThistleFlower(ctx, f, cx, bTop, r, now, idx) {
+  const cy=bTop+r, t=now/1200;
+  ctx.fillStyle=f.colors.bloom;
+  for(let i=0;i<10;i++){const a=(i/10)*Math.PI*2,sr=r+3+Math.sin(t+i)*0.5,px=Math.round(cx+Math.cos(a)*sr),py=Math.round(cy+Math.sin(a)*sr);ctx.fillRect(px-1,py-1,2,2);}
+  ctx.fillStyle=f.colors.center; ctx.fillRect(cx-3,cy-3,7,7);
+  ctx.fillStyle='#D1A8E0'; ctx.fillRect(cx-1,cy-1,3,3);
+}
+function drawPeony(ctx, f, cx, bTop, r) {
+  const cy=bTop+r;
+  ctx.fillStyle=f.colors.bloom;
+  for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2,px=Math.round(cx+Math.cos(a)*(r+1)),py=Math.round(cy+Math.sin(a)*(r+1));ctx.fillRect(px-4,py-4,8,8);}
+  ctx.fillStyle='#F06292';
+  for(let i=0;i<8;i++){const a=(i/8+0.5/8)*Math.PI*2,pr=Math.round(r*0.65),px=Math.round(cx+Math.cos(a)*pr),py=Math.round(cy+Math.sin(a)*pr);ctx.fillRect(px-3,py-3,6,6);}
+  ctx.fillStyle='#EC407A'; ctx.fillRect(cx-3,cy-3,7,7);
+  ctx.fillStyle=f.colors.center; ctx.fillRect(cx-2,cy-2,4,4);
+  ctx.fillStyle='#FFB3C6'; ctx.fillRect(cx-1,cy-1,2,2);
+}
+function drawFernFlower(ctx, f, cx, bTop, r, stemH, baseY) {
+  const spikeTop=bTop+r;
+  ctx.fillStyle=f.colors.sprout; ctx.fillRect(cx-1,spikeTop,2,r*2.5);
+  for(let i=0;i<4;i++){
+    const leafY=spikeTop+i*(r*2.5/4), leafSpan=r-i;
+    ctx.fillStyle=i%2===0?f.colors.bloom:'#388E3C';
+    ctx.fillRect(cx-leafSpan-2,leafY,leafSpan+1,2); ctx.fillRect(cx-leafSpan-3,leafY+2,leafSpan,2);
+    ctx.fillRect(cx+2,leafY,leafSpan+1,2); ctx.fillRect(cx+3,leafY+2,leafSpan,2);
+  }
+  ctx.fillStyle=f.colors.center; ctx.fillRect(cx-2,spikeTop-2,4,3);
+}
+function drawGoldenrod(ctx, f, cx, bTop, r, now, idx) {
+  const spikeTop=bTop+r*0.5, t=now/1000;
+  ctx.fillStyle=f.colors.sprout; ctx.fillRect(cx-1,spikeTop,2,r*3);
+  for(let i=0;i<6;i++){
+    const fy=spikeTop+i*(r*3/6), wave=Math.sin(t*1.5+i+idx)*1;
+    ctx.fillStyle=f.colors.bloom; ctx.fillRect(cx-5+wave,fy,4,3); ctx.fillRect(cx+2+wave,fy,4,3);
+    ctx.fillStyle=f.colors.center; ctx.fillRect(cx-4+wave,fy+1,2,1); ctx.fillRect(cx+3+wave,fy+1,2,1);
+  }
+  ctx.fillStyle=f.colors.bloom;
+  for(let i=0;i<5;i++) ctx.fillRect(cx-3+i,spikeTop-2-i%3,3,3);
+}
+function drawNightshade(ctx, f, cx, bTop, r, now, idx) {
+  const cy=bTop+r, t=now/1000;
+  ctx.fillStyle=f.colors.sprout;
+  ctx.fillRect(cx-1,cy-r,2,r); ctx.fillRect(cx-r,cy-r*0.5,r,2); ctx.fillRect(cx+1,cy-r*0.5,r-1,2);
+  const berries=[{ox:-r,oy:-r*0.4},{ox:0,oy:-r*0.7},{ox:r-2,oy:-r*0.4},{ox:-r*0.5,oy:0},{ox:r*0.5,oy:0}];
+  for(const {ox,oy} of berries){
+    const shimmer=0.7+0.3*Math.sin(t*2+ox*0.1+idx);
+    ctx.save(); ctx.globalAlpha=shimmer;
+    ctx.fillStyle=f.colors.bloom; ctx.fillRect(Math.round(cx+ox)-3,Math.round(cy+oy)-3,6,6);
+    ctx.fillStyle='#4A0072'; ctx.fillRect(Math.round(cx+ox)-1,Math.round(cy+oy)-1,2,2);
+    ctx.restore();
+  }
+  ctx.save(); ctx.globalAlpha=0.12+0.08*Math.sin(t*1.8+idx);
+  const grad=ctx.createRadialGradient(cx,cy,2,cx,cy,r+4);
+  grad.addColorStop(0,'rgba(180,50,255,0.8)'); grad.addColorStop(1,'rgba(100,0,200,0)');
+  ctx.fillStyle=grad; ctx.fillRect(cx-r-5,cy-r-5,(r+5)*2,(r+5)*2);
+  ctx.restore();
+}
+function drawSunrose(ctx, f, cx, bTop, r, now, idx) {
+  const cy=bTop+r, t=now/900;
+  ctx.save(); ctx.globalAlpha=0.25+0.15*Math.sin(t+idx);
+  const grad=ctx.createRadialGradient(cx,cy,r-2,cx,cy,r+8);
+  grad.addColorStop(0,'rgba(255,200,50,0.7)'); grad.addColorStop(1,'rgba(255,120,0,0)');
+  ctx.fillStyle=grad; ctx.fillRect(cx-r-10,cy-r-10,(r+10)*2,(r+10)*2);
+  ctx.restore();
+  ctx.fillStyle=f.colors.bloom;
+  for(let i=0;i<12;i++){const a=(i/12)*Math.PI*2,rot=Math.sin(t*0.5+idx)*0.05,px=Math.round(cx+Math.cos(a+rot)*(r+2)),py=Math.round(cy+Math.sin(a+rot)*(r+2));ctx.fillRect(px-3,py-3,6,6);}
+  ctx.fillStyle='#FFCA28';
+  for(let i=0;i<8;i++){const a=(i/8+0.5/8)*Math.PI*2,pr=Math.round(r*0.7),px=Math.round(cx+Math.cos(a)*pr),py=Math.round(cy+Math.sin(a)*pr);ctx.fillRect(px-2,py-2,5,5);}
+  ctx.fillStyle=f.colors.center; ctx.fillRect(cx-4,cy-4,8,8);
+  ctx.fillStyle='#FFF9C4'; ctx.fillRect(cx-2,cy-2,4,4);
+  ctx.fillStyle='#FFFFFF'; ctx.fillRect(cx-1,cy-1,2,2);
+}
+
+// ── Horse shapes ──────────────────────────────────────────────────────────
+
+const HORSE_SHAPES = {
+  default: {
+    legW:3, bodyLeft:9, bodyTop:18, bodyW:20, bodyH:10,
+    neckX:7, neckTop:24, neckW:5, neckH:8,
+    headX:6, headTop:30, headW:9, headH:7,
+    noseX:12, noseTop:27, noseW:4, noseH:4,
+    eyeX:8, eyeTop:28, maneW:3, tailW:3, hoofColor:null, markings:null,
+  },
+  chestnutMare: {
+    legW:3, bodyLeft:9, bodyTop:17, bodyW:19, bodyH:10,
+    neckX:7, neckTop:23, neckW:5, neckH:8,
+    headX:6, headTop:29, headW:9, headH:7,
+    noseX:12, noseTop:26, noseW:4, noseH:4,
+    eyeX:8, eyeTop:27, maneW:3, tailW:3, hoofColor:'#C09060',
+    markings:(ctx,s,bb,c)=>{ ctx.fillStyle='#F0E0D0'; ctx.fillRect(s*9,-s*28+bb,s*2,s*5); },
+  },
+  appaloosa: {
+    legW:3, bodyLeft:9, bodyTop:18, bodyW:20, bodyH:10,
+    neckX:7, neckTop:24, neckW:5, neckH:8,
+    headX:6, headTop:30, headW:9, headH:7,
+    noseX:12, noseTop:27, noseW:4, noseH:4,
+    eyeX:8, eyeTop:28, maneW:3, tailW:3, hoofColor:'#B8A080',
+    markings:(ctx,s,bb,c)=>{
+      ctx.fillStyle='#A89060';
+      ctx.fillRect(-s*7,-s*17+bb,s*4,s*4); ctx.fillRect(-s*3,-s*14+bb,s*3,s*3);
+      ctx.fillRect(-s*6,-s*12+bb,s*3,s*3); ctx.fillRect(s*0,-s*16+bb,s*3,s*3);
+    },
+  },
+  paintHorse: {
+    legW:3, bodyLeft:9, bodyTop:18, bodyW:20, bodyH:10,
+    neckX:7, neckTop:24, neckW:5, neckH:8,
+    headX:6, headTop:30, headW:9, headH:7,
+    noseX:12, noseTop:27, noseW:4, noseH:4,
+    eyeX:8, eyeTop:28, maneW:4, tailW:3, hoofColor:'#8B6914',
+    markings:(ctx,s,bb,c)=>{
+      ctx.fillStyle='#8B5A2A'; ctx.fillRect(-s*2,-s*18+bb,s*8,s*7); ctx.fillRect(-s*4,-s*16+bb,s*4,s*5);
+      ctx.fillStyle='#F8F0E0'; ctx.fillRect(s*7,-s*30+bb,s*4,s*6);
+    },
+  },
+  goldenPalomino: {
+    legW:3, bodyLeft:9, bodyTop:19, bodyW:19, bodyH:9,
+    neckX:7, neckTop:26, neckW:5, neckH:10,
+    headX:6, headTop:32, headW:9, headH:7,
+    noseX:12, noseTop:29, noseW:4, noseH:4,
+    eyeX:8, eyeTop:30, maneW:4, tailW:4, hoofColor:'#C8A030',
+    markings:(ctx,s,bb,c)=>{ ctx.fillStyle='#E0C060'; ctx.fillRect(-s*4,-s*10+bb,s*10,s*3); },
+  },
+  blackStallion: {
+    legW:3, bodyLeft:10, bodyTop:19, bodyW:21, bodyH:10,
+    neckX:7, neckTop:25, neckW:6, neckH:9,
+    headX:6, headTop:31, headW:10, headH:7,
+    noseX:12, noseTop:28, noseW:5, noseH:4,
+    eyeX:8, eyeTop:29, maneW:3, tailW:4, hoofColor:'#0A0804',
+    markings:(ctx,s,bb,c)=>{ ctx.fillStyle='#D0C0B0'; ctx.fillRect(s*9,-s*30+bb,s*3,s*3); },
+  },
+  frostPony: {
+    legW:3, bodyLeft:8, bodyTop:17, bodyW:18, bodyH:11,
+    neckX:7, neckTop:23, neckW:5, neckH:7,
+    headX:5, headTop:28, headW:10, headH:8,
+    noseX:12, noseTop:25, noseW:4, noseH:5,
+    eyeX:7, eyeTop:26, maneW:4, tailW:5, hoofColor:'#A8C0D8',
+    markings:(ctx,s,bb,c)=>{ ctx.fillStyle='rgba(180,210,240,0.4)'; ctx.fillRect(s*2,-s*18+bb,s*8,s*6); },
+  },
+  shadowRunner: {
+    legW:3, bodyLeft:9, bodyTop:19, bodyW:19, bodyH:9,
+    neckX:7, neckTop:25, neckW:5, neckH:9,
+    headX:6, headTop:31, headW:9, headH:7,
+    noseX:12, noseTop:28, noseW:4, noseH:4,
+    eyeX:8, eyeTop:29, maneW:3, tailW:3, hoofColor:'#1A1228',
+    markings:(ctx,s,bb,c)=>{ ctx.fillStyle='rgba(140,80,180,0.25)'; ctx.fillRect(-s*2,-s*19+bb,s*12,s*4); },
+  },
+  starlightUnicorn: {
+    legW:3, bodyLeft:9, bodyTop:18, bodyW:20, bodyH:10,
+    neckX:7, neckTop:25, neckW:5, neckH:9,
+    headX:6, headTop:31, headW:9, headH:7,
+    noseX:12, noseTop:28, noseW:4, noseH:4,
+    eyeX:8, eyeTop:29, maneW:5, tailW:5, hoofColor:'#C8A8F0',
+    markings:(ctx,s,bb,c)=>{
+      ctx.fillStyle='rgba(200,168,255,0.3)'; ctx.fillRect(-s*3,-s*19+bb,s*15,s*8);
+      ctx.fillStyle='rgba(255,255,255,0.6)';
+      ctx.fillRect(-s*1,-s*17+bb,s*2,s*2); ctx.fillRect(s*4,-s*15+bb,s*2,s*2); ctx.fillRect(s*1,-s*12+bb,s*2,s*2);
+    },
+  },
+  stormStallion: {
+    legW:4, bodyLeft:10, bodyTop:21, bodyW:22, bodyH:11,
+    neckX:7, neckTop:27, neckW:6, neckH:10,
+    headX:5, headTop:33, headW:11, headH:8,
+    noseX:11, noseTop:30, noseW:5, noseH:5,
+    eyeX:7, eyeTop:31, maneW:4, tailW:5, hoofColor:'#1A2848',
+    markings:(ctx,s,bb,c)=>{
+      ctx.fillStyle='rgba(160,192,255,0.55)'; ctx.fillRect(-s*2,-s*21+bb,s*3,s*9); ctx.fillRect(s*1,-s*17+bb,s*3,s*5);
+      ctx.fillStyle='rgba(120,180,255,0.35)'; ctx.fillRect(-s*7,-s*6+bb,s*3,s*4); ctx.fillRect(s*6,-s*6+bb,s*3,s*4);
+    },
+  },
+  harvestQueen: {
+    legW:4, bodyLeft:10, bodyTop:20, bodyW:23, bodyH:12,
+    neckX:7, neckTop:26, neckW:6, neckH:10,
+    headX:5, headTop:32, headW:11, headH:8,
+    noseX:11, noseTop:29, noseW:5, noseH:5,
+    eyeX:7, eyeTop:30, maneW:5, tailW:5, hoofColor:'#8B5E2A',
+    markings:(ctx,s,bb,c)=>{
+      ctx.fillStyle='#FFD600'; ctx.fillRect(s*6,-s*33+bb,s*7,s*2); ctx.fillRect(s*7,-s*35+bb,s*2,s*3); ctx.fillRect(s*10,-s*35+bb,s*2,s*3);
+      ctx.fillStyle='rgba(255,180,30,0.28)'; ctx.fillRect(-s*5,-s*12+bb,s*14,s*5);
+    },
+  },
+  meadowSpirit: {
+    legW:3, bodyLeft:9, bodyTop:19, bodyW:21, bodyH:10,
+    neckX:7, neckTop:25, neckW:5, neckH:9,
+    headX:6, headTop:31, headW:10, headH:7,
+    noseX:12, noseTop:28, noseW:4, noseH:4,
+    eyeX:8, eyeTop:29, maneW:5, tailW:6, hoofColor:'#3A6A1A',
+    markings:(ctx,s,bb,c)=>{
+      ctx.fillStyle='rgba(90,180,60,0.22)'; ctx.fillRect(-s*9,-s*21+bb,s*22,s*14);
+      ctx.fillStyle='rgba(50,150,30,0.35)'; ctx.fillRect(-s*3,-s*18+bb,s*5,s*4); ctx.fillRect(s*3,-s*14+bb,s*4,s*3); ctx.fillRect(-s*5,-s*13+bb,s*4,s*3);
+    },
+  },
+  goldenHerd: {
+    legW:4, bodyLeft:10, bodyTop:20, bodyW:23, bodyH:12,
+    neckX:7, neckTop:26, neckW:7, neckH:10,
+    headX:5, headTop:32, headW:11, headH:8,
+    noseX:11, noseTop:29, noseW:5, noseH:5,
+    eyeX:7, eyeTop:30, maneW:5, tailW:5, hoofColor:'#5A3800',
+    markings:(ctx,s,bb,c)=>{
+      ctx.fillStyle='rgba(255,220,50,0.25)'; ctx.fillRect(-s*5,-s*20+bb,s*16,s*12);
+      ctx.fillStyle='#FFD600'; ctx.fillRect(s*0,-s*16+bb,s*5,s*2); ctx.fillRect(s*2,-s*18+bb,s*2,s*5);
+      ctx.fillStyle='#D4A830'; ctx.fillRect(-s*7,-s*2+bb,s*3,s*2); ctx.fillRect(s*6,-s*2+bb,s*3,s*2);
+    },
+  },
+  phantomMare: {
+    legW:3, bodyLeft:9, bodyTop:20, bodyW:20, bodyH:10,
+    neckX:7, neckTop:26, neckW:5, neckH:10,
+    headX:6, headTop:32, headW:9, headH:7,
+    noseX:12, noseTop:29, noseW:4, noseH:4,
+    eyeX:8, eyeTop:30, maneW:4, tailW:6, hoofColor:'#0A0418',
+    markings:(ctx,s,bb,c)=>{
+      ctx.fillStyle='rgba(180,60,255,0.18)'; ctx.fillRect(-s*10,-s*22+bb,s*24,s*16);
+      ctx.fillStyle='rgba(140,40,220,0.40)'; ctx.fillRect(-s*4,-s*20+bb,s*3,s*8); ctx.fillRect(s*3,-s*17+bb,s*3,s*6);
+      ctx.fillStyle='#C060FF'; ctx.fillRect(s*8,-s*29+bb,s*3,s*2);
+    },
+  },
+  sunChariot: {
+    legW:4, bodyLeft:10, bodyTop:21, bodyW:23, bodyH:11,
+    neckX:7, neckTop:27, neckW:7, neckH:11,
+    headX:5, headTop:33, headW:11, headH:8,
+    noseX:11, noseTop:30, noseW:5, noseH:5,
+    eyeX:7, eyeTop:31, maneW:6, tailW:7, hoofColor:'#B86000',
+    markings:(ctx,s,bb,c)=>{
+      ctx.fillStyle='rgba(255,200,60,0.28)'; ctx.fillRect(-s*5,-s*21+bb,s*18,s*13);
+      ctx.fillStyle='#FF8F00'; ctx.fillRect(-s*8,-s*19+bb,s*5,s*3); ctx.fillRect(-s*6,-s*15+bb,s*4,s*3);
+      ctx.fillStyle='#FFF9C4'; ctx.fillRect(s*8,-s*32+bb,s*3,s*7);
+    },
+  },
+};
+
+function drawHorse(ctx, horseId, colors, cx, groundY, scale, facing, anim) {
+  const s = scale;
+  const fl = facing === 'left' ? -1 : 1;
+  ctx.save();
+  ctx.translate(Math.round(cx), Math.round(groundY));
+  ctx.scale(fl, 1);
+  const legBob = Math.sin(anim*4)*s*0.8;
+  const bodyBob = Math.sin(anim*4)*s*0.3;
+  const shape = HORSE_SHAPES[horseId] || HORSE_SHAPES.default;
+  // Legs
+  ctx.fillStyle = colors.body;
+  ctx.fillRect(-s*7, -s*8+legBob,       s*shape.legW, s*8);
+  ctx.fillRect(-s*3, -s*8-legBob,       s*shape.legW, s*8);
+  ctx.fillRect( s*2, -s*8-legBob*0.5,   s*shape.legW, s*8);
+  ctx.fillRect( s*6, -s*8+legBob*0.5,   s*shape.legW, s*8);
+  // Hooves
+  ctx.fillStyle = shape.hoofColor || colors.mane;
+  ctx.fillRect(-s*7, -s*1+legBob,       s*shape.legW, s*2);
+  ctx.fillRect(-s*3, -s*1-legBob,       s*shape.legW, s*2);
+  ctx.fillRect( s*2, -s*1-legBob*0.5,   s*shape.legW, s*2);
+  ctx.fillRect( s*6, -s*1+legBob*0.5,   s*shape.legW, s*2);
+  // Body
+  ctx.fillStyle = colors.body;
+  ctx.fillRect(-s*shape.bodyLeft, -s*shape.bodyTop+bodyBob, s*shape.bodyW, s*shape.bodyH);
+  // Markings
+  if (shape.markings) shape.markings(ctx, s, bodyBob, colors);
+  // Neck
+  ctx.fillStyle = colors.body;
+  ctx.fillRect(s*shape.neckX, -s*shape.neckTop+bodyBob, s*shape.neckW, s*shape.neckH);
+  // Head
+  ctx.fillRect(s*shape.headX, -s*shape.headTop+bodyBob, s*shape.headW, s*shape.headH);
+  // Nose
+  ctx.fillStyle = colors.nose;
+  ctx.fillRect(s*shape.noseX, -s*shape.noseTop+bodyBob, s*shape.noseW, s*shape.noseH);
+  // Eye
+  ctx.fillStyle = colors.eye;
+  ctx.fillRect(s*shape.eyeX, -s*shape.eyeTop+bodyBob, s*2, s*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillRect(s*shape.eyeX+s, -s*shape.eyeTop+bodyBob, s, s);
+  // Nostril
+  ctx.fillStyle = colors.nose;
+  ctx.fillRect(s*13, -s*24+bodyBob, s*2, s*2);
+  // Ear
+  ctx.fillStyle = colors.body;
+  ctx.fillRect(s*7, -s*32+bodyBob, s*3, s*4);
+  ctx.fillStyle = colors.mane;
+  ctx.fillRect(s*8, -s*31+bodyBob, s*1, s*2);
+  // Mane
+  ctx.fillStyle = colors.mane;
+  ctx.fillRect(s*6, -s*30+bodyBob, s*shape.maneW, s*7);
+  ctx.fillRect(s*5, -s*26+bodyBob, s*shape.maneW, s*4);
+  ctx.fillRect(s*shape.neckX-1, -s*(shape.neckTop-2)+bodyBob, s*2, s*shape.neckH);
+  // Tail
+  const tailWag = Math.sin(anim*2.5)*s*2;
+  ctx.fillRect(-s*10, -s*18+bodyBob, s*shape.tailW, s*12+tailWag);
+  ctx.fillRect(-s*12, -s*10+bodyBob+tailWag, s*shape.tailW, s*6);
+  ctx.restore();
+}
+
+function drawUnicornHorn(ctx, colors, cx, groundY, scale, facing, anim) {
+  const s = scale, fl = facing === 'left' ? -1 : 1;
+  const bodyBob = Math.sin(anim*4)*s*0.3;
+  ctx.save();
+  ctx.translate(Math.round(cx), Math.round(groundY));
+  ctx.scale(fl, 1);
+  ctx.fillStyle = '#E8D8FF';
+  ctx.fillRect(s*9, -s*36+bodyBob, s*2, s*5);
+  ctx.fillRect(s*10,-s*38+bodyBob, s*1, s*3);
+  ctx.fillRect(s*10,-s*40+bodyBob, s*1, s*2);
+  ctx.fillStyle = '#B090E8';
+  ctx.fillRect(s*9,-s*37+bodyBob,s*1,s*1);
+  ctx.fillRect(s*10,-s*39+bodyBob,s*1,s*1);
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillRect(s*9,-s*36+bodyBob,s*1,s*3);
+  const sparkT = anim*2;
+  ctx.fillStyle = 'rgba(220,200,255,0.8)';
+  ctx.fillRect(s*8+Math.round(Math.cos(sparkT)*s*3),-s*38+bodyBob+Math.round(Math.sin(sparkT)*s*2),s,s);
+  ctx.restore();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// HERO CANVAS ANIMATION
+// ════════════════════════════════════════════════════════════════════════════
+
+const heroCanvas = document.getElementById('hero-canvas');
+const heroCtx = heroCanvas.getContext('2d');
+const startTime = performance.now() / 1000;
+
+// Two walking horses for the hero scene
+const heroHorses = [
+  { id:'chestnutMare',     colors: HORSES.chestnutMare.colors,     x: 120, speed: 22, facing: 'right' },
+  { id:'goldenPalomino',   colors: HORSES.goldenPalomino.colors,   x: 280, speed: 16, facing: 'left'  },
+];
+
+function drawHeroScene(now) {
+  const W = heroCanvas.width, H = heroCanvas.height;
+  const elapsed = performance.now() / 1000 - startTime;
+  const nf = nightFactor(elapsed);
+  const pal = blendPalette(nf);
+  const gardenTop = Math.round(H * 0.52);
+
+  // Sky
+  drawSky(heroCtx, W, H, pal, nf);
+  drawCelestialBody(heroCtx, W, H, nf, elapsed);
+
+  // Ground
+  heroCtx.fillStyle = pal.ground;
+  heroCtx.fillRect(0, gardenTop-4, W, H - gardenTop + 4);
+
+  drawMeadowFlowers(heroCtx, W, gardenTop, pal, nf, elapsed*1000);
+  drawFence(heroCtx, W, gardenTop, nf);
+  if (nf > 0.15) drawCampfire(heroCtx, W, gardenTop, nf, elapsed*1000);
+  drawGrassTufts(heroCtx, W, gardenTop, pal.grass);
+
+  // A few bloom flowers on the ground
+  const flowerSlots = [
+    { flower: FLOWERS.daisy, x: 60 },
+    { flower: FLOWERS.lavender, x: 160 },
+    { flower: FLOWERS.sunflower, x: 260 },
+    { flower: FLOWERS.moonpetal, x: 360 },
+  ];
+  const baseY = gardenTop + 60;
+  for (let i = 0; i < flowerSlots.length; i++) {
+    const {flower, x} = flowerSlots[i];
+    drawBloom(heroCtx, flower, x, baseY, 32, 40, elapsed*1000, i);
+  }
+
+  // Walk horses
+  const groundY = gardenTop + 44;
+  const scale = 1.8;
+  const margin = scale * 22;
+  const dt = 1/60;
+  for (const h of heroHorses) {
+    if (h.facing === 'right') {
+      h.x += h.speed * dt;
+      if (h.x > W - margin) { h.x = W - margin; h.facing = 'left'; }
+    } else {
+      h.x -= h.speed * dt;
+      if (h.x < margin) { h.x = margin; h.facing = 'right'; }
+    }
+    drawHorse(heroCtx, h.id, h.colors, h.x, groundY, scale, h.facing, elapsed);
+    if (h.id === 'starlightUnicorn') drawUnicornHorn(heroCtx, h.colors, h.x, groundY, scale, h.facing, elapsed);
+  }
+
+  // Fireflies at night
+  if (nf > 0.35) {
+    const alpha = Math.min(1, (nf-0.35)/0.4);
+    const t = elapsed;
+    heroCtx.save();
+    for (let i = 0; i < 10; i++) {
+      const fx = (Math.sin(t*0.4 + i*1.3) * 0.5 + 0.5) * W;
+      const fy = gardenTop + 20 + (Math.cos(t*0.3 + i*0.9) * 0.5 + 0.5) * (H - gardenTop - 30);
+      const flicker = 0.4 + 0.6*Math.sin(t*3 + i*2.1);
+      heroCtx.globalAlpha = alpha * flicker * 0.8;
+      heroCtx.fillStyle = '#AAFF80';
+      heroCtx.fillRect(Math.round(fx)-1, Math.round(fy)-1, 2, 2);
+    }
+    heroCtx.restore();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FLOWER DEMO CARDS
+// ════════════════════════════════════════════════════════════════════════════
+
+const showcaseFlowers = [
+  'daisy','lavender','sunflower','clover','rosehip',
+  'bluebell','marigold','moonpetal','thistle','peony',
+  'fern','goldenrod','nightshade','sunrose'
+];
+
+const flowerDemoContainer = document.getElementById('flower-demos');
+const flowerCanvases = [];
+
+for (const id of showcaseFlowers) {
+  const flower = FLOWERS[id];
+  const card = document.createElement('div');
+  card.className = 'flower-demo-card';
+  const canvas = document.createElement('canvas');
+  canvas.width = 54; canvas.height = 64;
+  card.appendChild(canvas);
+  const label = document.createElement('div');
+  label.className = 'flower-name';
+  label.textContent = flower.name;
+  card.appendChild(label);
+  flowerDemoContainer.appendChild(card);
+  flowerCanvases.push({ canvas, flower });
+}
+
+function drawFlowerCard(canvas, flower, now) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  // Background — warm dark
+  ctx.fillStyle = '#1A0E08';
+  ctx.fillRect(0, 0, W, H);
+  // Tiny ground
+  ctx.fillStyle = lerpColor('#5A9A3A','#3A6A20',0.3);
+  ctx.fillRect(0, H-12, W, 12);
+  // Grass tufts
+  ctx.fillStyle = '#8DB85A';
+  for (let gx = 3; gx < W-2; gx += 9) {
+    ctx.fillRect(gx, H-12, 2, 4);
+    ctx.fillRect(gx+3, H-12, 2, 6);
+  }
+  const baseY = H - 12;
+  drawBloom(ctx, flower, W/2, baseY, W*0.8, H*0.75, now, 0);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// HORSE CAROUSEL
+// ════════════════════════════════════════════════════════════════════════════
+
+const horseCarousel = document.getElementById('horse-carousel');
+const horseCanvases = [];
+
+// Show 8 revealed, 6 mystery
+const revealedHorses = HORSE_LIST.slice(0, 8);
+const mysteryCount = 6;
+
+for (const horse of revealedHorses) {
+  const card = document.createElement('div');
+  card.className = 'horse-card';
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 120; canvas.height = 90;
+  card.appendChild(canvas);
+
+  const name = document.createElement('div');
+  name.className = 'horse-name';
+  name.textContent = horse.name;
+  card.appendChild(name);
+
+  const perk = document.createElement('div');
+  perk.className = 'horse-perk';
+  perk.textContent = horse.perk;
+  card.appendChild(perk);
+
+  const desc = document.createElement('div');
+  desc.className = 'horse-desc';
+  desc.textContent = horse.desc;
+  card.appendChild(desc);
+
+  horseCarousel.appendChild(card);
+  horseCanvases.push({ canvas, horse, x: 60, facing: 'right', speed: 14 + Math.random()*8 });
+}
+
+for (let i = 0; i < mysteryCount; i++) {
+  const card = document.createElement('div');
+  card.className = 'horse-card mystery';
+
+  const icon = document.createElement('div');
+  icon.className = 'mystery-icon';
+  icon.textContent = '?';
+  card.appendChild(icon);
+
+  const name = document.createElement('div');
+  name.className = 'horse-name';
+  name.textContent = '???';
+  card.appendChild(name);
+
+  const perk = document.createElement('div');
+  perk.className = 'horse-perk';
+  perk.textContent = 'Unknown perk';
+  card.appendChild(perk);
+
+  const desc = document.createElement('div');
+  desc.className = 'horse-desc';
+  desc.textContent = 'Discover this horse by growing its favorite flower...';
+  card.appendChild(desc);
+
+  horseCarousel.appendChild(card);
+}
+
+function drawHorseCard(entry, now) {
+  const { canvas, horse } = entry;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const elapsed = performance.now() / 1000 - startTime;
+
+  ctx.fillStyle = '#2A1A10';
+  ctx.fillRect(0, 0, W, H);
+
+  // Ground strip
+  ctx.fillStyle = lerpColor('#5A9A3A','#3A6A20',0.4);
+  ctx.fillRect(0, H-14, W, 14);
+
+  // Fence rails
+  ctx.fillStyle = '#A07820';
+  ctx.fillRect(0, H-28, W, 3);
+  ctx.fillRect(0, H-22, W, 3);
+  ctx.fillStyle = '#8B6914';
+  for (let fx = 0; fx < W; fx += 20) {
+    ctx.fillRect(fx, H-30, 3, 16);
+  }
+
+  const scale = 1.6;
+  const groundY = H - 14;
+  const margin = scale * 20;
+  const dt = 1/60;
+  const w = canvas.width;
+
+  if (entry.facing === 'right') {
+    entry.x += entry.speed * dt;
+    if (entry.x > w - margin) { entry.x = w - margin; entry.facing = 'left'; }
+  } else {
+    entry.x -= entry.speed * dt;
+    if (entry.x < margin) { entry.x = margin; entry.facing = 'right'; }
+  }
+
+  drawHorse(ctx, horse.id, horse.colors, entry.x, groundY, scale, entry.facing, elapsed);
+  if (horse.id === 'starlightUnicorn') drawUnicornHorn(ctx, horse.colors, entry.x, groundY, scale, entry.facing, elapsed);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TRUST CANVAS
+// ════════════════════════════════════════════════════════════════════════════
+
+const trustCanvas = document.getElementById('trust-canvas');
+const trustCtx = trustCanvas.getContext('2d');
+const trustHorse = { id: 'goldenPalomino', colors: HORSES.goldenPalomino.colors };
+let trustX = 260;
+const trustHeartsEl = document.getElementById('trust-hearts');
+
+// Animate hearts cycling
+let trustLevel = 4;
+const trustMax = 7;
+setInterval(() => {
+  trustLevel = (trustLevel % trustMax) + 1;
+  const hearts = trustHeartsEl.querySelectorAll('.heart');
+  const label = trustHeartsEl.querySelector('.trust-label');
+  hearts.forEach((h, i) => {
+    h.classList.toggle('filled', i < trustLevel);
+    h.classList.toggle('empty', i >= trustLevel);
+  });
+  if (label) label.textContent = `${trustLevel} / ${trustMax} trust`;
+}, 1200);
+
+function drawTrustScene(now) {
+  const W = trustCanvas.width, H = trustCanvas.height;
+  const elapsed = performance.now() / 1000 - startTime;
+  const nf = 0; // always day for trust scene
+  const pal = blendPalette(nf);
+
+  // Sky
+  drawSky(trustCtx, W, H, pal, nf);
+
+  // Ground
+  trustCtx.fillStyle = pal.ground;
+  trustCtx.fillRect(0, H*0.5, W, H*0.5);
+
+  // Meadow flowers
+  drawMeadowFlowers(trustCtx, W, Math.round(H*0.5)+4, pal, nf, now);
+
+  // Fence
+  drawFence(trustCtx, W, Math.round(H*0.5)+4, nf);
+  drawGrassTufts(trustCtx, W, Math.round(H*0.5)+4, pal.grass);
+
+  // Horse standing near fence, gently breathing
+  const groundY = Math.round(H*0.5) + 38;
+  const scale = 1.5;
+  const breathCycle = Math.sin(elapsed * 0.8) * 1;
+  const hx = W * 0.7 + breathCycle;
+
+  drawHorse(trustCtx, trustHorse.id, trustHorse.colors, hx, groundY, scale, 'left', elapsed * 0.15);
+
+  // Floating flowers being offered
+  const t = elapsed;
+  const flowerX = W * 0.35;
+  const flowerY = groundY - 36 - Math.sin(t*1.5)*5;
+  trustCtx.save();
+  trustCtx.globalAlpha = 0.7 + 0.3*Math.sin(t*2);
+  drawBloom(trustCtx, FLOWERS.lavender, flowerX, flowerY + 18, 22, 28, now, 0);
+  trustCtx.restore();
+
+  // Arrow pointing from flower to horse
+  const arrowAlpha = 0.5 + 0.5*Math.sin(t*2);
+  trustCtx.save();
+  trustCtx.globalAlpha = arrowAlpha;
+  trustCtx.fillStyle = '#FFD54F';
+  const ax = flowerX + 30, ay = flowerY - 2;
+  for (let i = 0; i < 3; i++) {
+    trustCtx.fillRect(ax + i*10, ay, 6, 3);
+  }
+  trustCtx.fillRect(ax + 25, ay - 4, 5, 11);
+  trustCtx.restore();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FARM CANVAS
+// ════════════════════════════════════════════════════════════════════════════
+
+const farmCanvas = document.getElementById('farm-canvas');
+const farmCtx = farmCanvas.getContext('2d');
+
+// Simulated farm state — a few plots with various garden states
+const fakePlots = [
+  {
+    label: 'Plot 1', gardens: 10, active: true,
+    cells: [
+      {state:'ready',   bloom:FLOWERS.daisy},
+      {state:'ready',   bloom:FLOWERS.lavender},
+      {state:'watered', bloom:FLOWERS.sunflower},
+      {state:'watered', bloom:FLOWERS.clover},
+      {state:'planted', bloom:null},
+      {state:'empty',   bloom:null},
+      {state:'ready',   bloom:FLOWERS.rosehip},
+      {state:'watered', bloom:FLOWERS.bluebell},
+      {state:'empty',   bloom:null},
+      {state:'planted', bloom:null},
+    ],
+  },
+  {
+    label: 'Plot 2', gardens: 5, active: false,
+    cells: [
+      {state:'ready',  bloom:FLOWERS.marigold},
+      {state:'watered',bloom:FLOWERS.moonpetal},
+      {state:'empty',  bloom:null},
+      {state:'planted',bloom:null},
+      {state:'watered',bloom:FLOWERS.thistle},
+    ],
+  },
+  {
+    label: 'Plot 3', gardens: 5, active: false,
+    cells: [
+      {state:'empty',  bloom:null},
+      {state:'planted',bloom:null},
+      {state:'empty',  bloom:null},
+      {state:'empty',  bloom:null},
+      {state:'empty',  bloom:null},
+    ],
+  },
+  { label: '+', buy: true, gardens: 0, cells: [] },
+];
+
+function drawFarmPreview(now) {
+  const W = farmCanvas.width, H = farmCanvas.height;
+  const elapsed = performance.now() / 1000 - startTime;
+  const nf = 0;
+
+  // Background
+  farmCtx.fillStyle = '#2A4A1A';
+  farmCtx.fillRect(0, 0, W, H);
+
+  const cols = 4, pad = 12, gap = 8;
+  const tileW = Math.floor((W - pad*2 - gap*(cols-1)) / cols);
+  const tileH = H - pad*2;
+
+  for (let i = 0; i < fakePlots.length; i++) {
+    const plot = fakePlots[i];
+    const tx = pad + i*(tileW+gap);
+    const ty = pad;
+
+    if (plot.buy) {
+      // Buy tile
+      farmCtx.fillStyle = '#1A3A18';
+      farmCtx.fillRect(tx, ty, tileW, tileH);
+      farmCtx.save();
+      farmCtx.strokeStyle = '#6A9A6A';
+      farmCtx.lineWidth = 2;
+      farmCtx.setLineDash([4,3]);
+      farmCtx.strokeRect(tx+2, ty+2, tileW-4, tileH-4);
+      farmCtx.setLineDash([]);
+      const pulse = 0.7 + 0.3*Math.sin(elapsed*2);
+      farmCtx.globalAlpha = pulse;
+      farmCtx.fillStyle = '#A5D6A7';
+      farmCtx.font = `bold ${Math.floor(tileW*0.38)}px monospace`;
+      farmCtx.textAlign = 'center';
+      farmCtx.textBaseline = 'middle';
+      farmCtx.fillText('+', tx+tileW/2, ty+tileH/2-6);
+      farmCtx.font = '9px monospace';
+      farmCtx.fillText('500c', tx+tileW/2, ty+tileH-10);
+      farmCtx.restore();
+      continue;
+    }
+
+    // Plot tile background
+    farmCtx.fillStyle = plot.active ? '#3A6A2A' : '#2A5A1A';
+    farmCtx.fillRect(tx, ty, tileW, tileH);
+
+    // Grass texture
+    farmCtx.fillStyle = 'rgba(255,255,255,0.05)';
+    for (let gx = tx+3; gx < tx+tileW-2; gx += 5) farmCtx.fillRect(gx, ty+2, 1, tileH-4);
+
+    // Mini garden dots
+    const mCols = Math.min(plot.gardens, 5);
+    const mRows = Math.ceil(plot.gardens / mCols);
+    const dotPad = 4, dotGap = 2;
+    const dotArea = tileW - dotPad*2;
+    const dotW = Math.max(3, Math.floor((dotArea - dotGap*(mCols-1)) / mCols));
+    const dotH = mRows > 1 ? Math.floor(((tileH*0.6) - dotGap*(mRows-1)) / mRows) : dotW;
+    const dotStartX = tx + dotPad + Math.floor((dotArea - (mCols*dotW + (mCols-1)*dotGap))/2);
+    const dotStartY = ty + 14 + Math.floor(((tileH-22) - (mRows*dotH + (mRows-1)*dotGap))/2);
+
+    for (let gi = 0; gi < plot.gardens; gi++) {
+      const cell = plot.cells[gi];
+      const gc = gi % mCols, gr = Math.floor(gi/mCols);
+      const dx = dotStartX + gc*(dotW+dotGap);
+      const dy = dotStartY + gr*(dotH+dotGap);
+      let col;
+      if (!cell || cell.state === 'empty') col = '#4A7C3A';
+      else if (cell.state === 'planted')  col = '#7B5033';
+      else if (cell.state === 'watered')  col = cell.bloom ? cell.bloom.colors.sprout : '#66BB6A';
+      else                                col = cell.bloom ? cell.bloom.colors.bloom : '#FFD54F';
+      farmCtx.fillStyle = col;
+      farmCtx.fillRect(dx, dy, Math.max(2,dotW), Math.max(2,dotH));
+    }
+
+    // Label
+    farmCtx.fillStyle = '#A8C8A0';
+    farmCtx.font = `bold 9px monospace`;
+    farmCtx.textAlign = 'center';
+    farmCtx.textBaseline = 'top';
+    farmCtx.fillText(plot.label, tx+tileW/2, ty+3);
+    farmCtx.fillStyle = '#7A9870';
+    farmCtx.font = '8px monospace';
+    farmCtx.textBaseline = 'bottom';
+    farmCtx.fillText(`${plot.gardens}g`, tx+tileW/2, ty+tileH-2);
+
+    // Active border
+    if (plot.active) {
+      farmCtx.strokeStyle = '#FFD54F';
+      farmCtx.lineWidth = 2;
+      farmCtx.strokeRect(tx+1, ty+1, tileW-2, tileH-2);
+    } else {
+      farmCtx.strokeStyle = '#386828';
+      farmCtx.lineWidth = 1;
+      farmCtx.strokeRect(tx, ty, tileW, tileH);
+    }
+    farmCtx.textAlign = 'left';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PERK LIST
+// ════════════════════════════════════════════════════════════════════════════
+
+const perks = [
+  { name:'Auto-Plow',      horse:'Chestnut Mare',    icon:'🌾', color:'#8B3A2A', desc:'Plows gardens after each harvest, no tapping required', barW: 0.45 },
+  { name:'Swift Growth',   horse:'Paint Horse',      icon:'🌿', color:'#E8D5B0', desc:'Flowers grow 30% faster with this perk active',          barW: 0.60 },
+  { name:'Star Blessing',  horse:'Starlight Unicorn',icon:'✨', color:'#EEE8FF', desc:'All coins multiplied — everything worth more',           barW: 0.80 },
+  { name:'Royal Harvest',  horse:'Harvest Queen',    icon:'👑', color:'#8B5E2A', desc:'Auto-harvests ready plots on a timer',                   barW: 0.55 },
+  { name:'Phantom Boost',  horse:'Phantom Mare',     icon:'🔮', color:'#1A0830', desc:'Doubles all other horses\' perk levels on this plot',    barW: 0.90 },
+];
+
+const perkList = document.getElementById('perk-list');
+perks.forEach((perk, i) => {
+  const row = document.createElement('div');
+  row.className = 'perk-row';
+  row.innerHTML = `
+    <div class="perk-icon" style="background:${perk.color};">${perk.icon}</div>
+    <div style="flex:1; min-width:0;">
+      <h3>${perk.name}</h3>
+      <p>${perk.desc}</p>
+      <div class="perk-bar-wrap">
+        <div class="perk-bar" style="width:${Math.round(perk.barW*100)}%;animation-delay:${i*0.2}s;"></div>
+      </div>
+    </div>
+    <div style="font-size:0.65rem;color:var(--muted);text-align:right;flex-shrink:0;margin-left:6px;">Lv ${Math.round(perk.barW*10)}</div>
+  `;
+  perkList.appendChild(row);
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// FOOTER CANVAS — mini cozy horse scene
+// ════════════════════════════════════════════════════════════════════════════
+
+const footerCanvas = document.getElementById('footer-canvas');
+const footerCtx = footerCanvas.getContext('2d');
+const footerHorse = { id:'starlightUnicorn', colors: HORSES.starlightUnicorn.colors, x: 100, facing: 'right', speed: 18 };
+
+function drawFooterScene(now) {
+  const W = footerCanvas.width, H = footerCanvas.height;
+  const elapsed = performance.now() / 1000 - startTime;
+  // Slowly oscillate between day and dusk
+  const nf = 0.6 + 0.35*Math.sin(elapsed * 0.25);
+  const pal = blendPalette(nf);
+  const gardenTop = Math.round(H * 0.55);
+
+  drawSky(footerCtx, W, H, pal, nf);
+  drawCelestialBody(footerCtx, W, H, nf, elapsed);
+  footerCtx.fillStyle = pal.ground;
+  footerCtx.fillRect(0, gardenTop, W, H - gardenTop);
+  drawMeadowFlowers(footerCtx, W, gardenTop, pal, nf, elapsed*1000);
+  drawFence(footerCtx, W, gardenTop, nf);
+  if (nf > 0.15) drawCampfire(footerCtx, W, gardenTop, nf, elapsed*1000);
+  drawGrassTufts(footerCtx, W, gardenTop, pal.grass);
+
+  const groundY = gardenTop + 36;
+  const scale = 1.5;
+  const margin = scale * 20;
+  const dt = 1/60;
+
+  if (footerHorse.facing === 'right') {
+    footerHorse.x += footerHorse.speed * dt;
+    if (footerHorse.x > W - margin) { footerHorse.x = W - margin; footerHorse.facing = 'left'; }
+  } else {
+    footerHorse.x -= footerHorse.speed * dt;
+    if (footerHorse.x < margin) { footerHorse.x = margin; footerHorse.facing = 'right'; }
+  }
+
+  drawHorse(footerCtx, footerHorse.id, footerHorse.colors, footerHorse.x, groundY, scale, footerHorse.facing, elapsed);
+  drawUnicornHorn(footerCtx, footerHorse.colors, footerHorse.x, groundY, scale, footerHorse.facing, elapsed);
+
+  if (nf > 0.3) {
+    const alpha = Math.min(1, (nf-0.3)/0.4);
+    const t = elapsed;
+    footerCtx.save();
+    for (let i = 0; i < 6; i++) {
+      const fx = (Math.sin(t*0.5+i*1.7)*0.5+0.5)*W;
+      const fy = gardenTop+10 + (Math.cos(t*0.4+i*1.1)*0.5+0.5)*(H-gardenTop-20);
+      footerCtx.globalAlpha = alpha*(0.4+0.6*Math.sin(t*3+i*2));
+      footerCtx.fillStyle = '#AAFF80';
+      footerCtx.fillRect(Math.round(fx)-1,Math.round(fy)-1,2,2);
+    }
+    footerCtx.restore();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MAIN ANIMATION LOOP
+// ════════════════════════════════════════════════════════════════════════════
+
+function tick() {
+  const now = performance.now();
+
+  drawHeroScene(now);
+
+  for (const entry of flowerCanvases) {
+    drawFlowerCard(entry.canvas, entry.flower, now);
+  }
+
+  for (const entry of horseCanvases) {
+    drawHorseCard(entry, now);
+  }
+
+  drawTrustScene(now);
+  drawFarmPreview(now);
+  drawFooterScene(now);
+
+  requestAnimationFrame(tick);
+}
+
+requestAnimationFrame(tick);
+
+// ════════════════════════════════════════════════════════════════════════════
+// SCROLL FADE-IN
+// ════════════════════════════════════════════════════════════════════════════
+
+const observer = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  }
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

@@ -31,6 +31,10 @@ PWA icons live at `assets/icon-192.png` and `assets/icon-512.png`.
 To regenerate: `node generate-icons.js` (creates warm-color placeholder PNGs)
 For proper drawn icons: open `generate-icons.html` in any browser, click Save.
 
+## Showcase
+
+- [showcase.html](showcase.html) — animated feature showcase (open in browser)
+
 ## Docs
 
 - [Game Vision](docs/overview.md) — what Pony Pastures is and feels like
